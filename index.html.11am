@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบสารสนเทศติดตามและประเมินผลตัวชี้วัดเชิงยุทธศาสตร์ | สสจ.ขอนแก่น</title>
+  <meta name="description" content="ระบบสารสนเทศติดตามและประเมินผลตัวชี้วัดเชิงยุทธศาสตร์ สำนักงานสาธารณสุขจังหวัดขอนแก่น พ.ศ. 2566–2570 พร้อม AI Prediction Engine">
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js CDN for Modern Healthcare Visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  
+  <!-- Mobile Drawer Backdrop Overlay -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
+
+  <div class="app-layout" id="app-layout">
+    
+    <!-- =====================================================================
+         1. LEFT SIDEBAR NAVIGATION (Executive Strategic Navigation)
+         ===================================================================== -->
+    <aside class="app-sidebar" id="app-sidebar">
+      
+      <!-- Sidebar Header / Branding -->
+      <div class="sidebar-header">
+        <div class="sidebar-brand" onclick="switchView('overview')">
+          <div class="brand-emblem-wrap" title="สำนักงานสาธารณสุขจังหวัดขอนแก่น">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-system-name">ระบบสารสนเทศติดตาม<br>และประเมินผลตัวชี้วัด</h1>
+            <span class="brand-org-name">สำนักงานสาธารณสุขจังหวัดขอนแก่น</span>
+          </div>
+        </div>
+        <button class="sidebar-collapse-btn-inner" id="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยายเมนู">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Navigation Menu Grouped by Executive Workflow -->
+      <nav class="sidebar-nav">
+        
+        <!-- Group 1: ภาพรวม -->
+        <div class="nav-section-label">ภาพรวม</div>
+        <button class="nav-item active" data-view="overview" onclick="switchView('overview')">
+          <span class="nav-item-icon">🏠</span>
+          <span class="nav-item-text">ภาพรวมผู้บริหาร</span>
+        </button>
+
+        <!-- Group 2: ยุทธศาสตร์และผลลัพธ์ -->
+        <div class="nav-section-label">ยุทธศาสตร์และผลลัพธ์</div>
+        <button class="nav-item" data-view="pillars" onclick="switchView('pillars')">
+          <span class="nav-item-icon">🎯</span>
+          <span class="nav-item-text">ยุทธศาสตร์และประเด็น</span>
+        </button>
+        <button class="nav-item" data-view="kpi-list" onclick="switchView('kpi-list')">
+          <span class="nav-item-icon">📊</span>
+          <span class="nav-item-text">ตัวชี้วัด</span>
+          <span class="nav-item-badge">43</span>
+        </button>
+
+        <!-- Group 3: วิเคราะห์และรายงาน -->
+        <div class="nav-section-label">วิเคราะห์และรายงาน</div>
+        <button class="nav-item nav-item-ai" data-view="ai-center" onclick="switchView('ai-center')">
+          <span class="nav-item-icon">✨</span>
+          <span class="nav-item-text">AI Strategy & Prediction</span>
+          <span class="badge-ai-new">AI</span>
+        </button>
+        <button class="nav-item" data-view="reports" onclick="switchView('reports')">
+          <span class="nav-item-icon">📑</span>
+          <span class="nav-item-text">รายงาน</span>
+        </button>
+
+        <!-- Group 5: ระบบ -->
+        <div class="nav-section-label">ระบบ</div>
+        <button class="nav-item" data-view="settings" onclick="switchView('settings')">
+          <span class="nav-item-icon">⚙️</span>
+          <span class="nav-item-text">ตั้งค่า & AI Model</span>
+        </button>
+
+      </nav>
+
+    </aside>
+
+    <!-- =====================================================================
+         2. MAIN WRAPPER (Top Header + Workspace)
+         ===================================================================== -->
+    <div class="app-main-wrapper">
+      
+      <!-- Top Executive Header -->
+      <header class="app-top-header">
+        <div class="header-left">
+          <button class="header-hamburger-btn" id="header-hamburger-btn" onclick="toggleSidebar()" title="ย่อ/ขยายเมนู">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div class="header-page-title-wrap">
+            <h2 class="header-page-title" id="header-page-title">ภาพรวมผู้บริหาร</h2>
+            <div class="header-breadcrumb" id="header-breadcrumb">
+              <span>ระบบสารสนเทศ</span> &rsaquo; <span class="active">ภาพรวมผู้บริหาร</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Global Fiscal Year Selector Dropdown -->
+          <div class="global-year-dropdown-wrap">
+            <label class="year-dropdown-label" for="global-fiscal-year-select">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>ปีงบประมาณ:</span>
+            </label>
+            <select class="global-fiscal-year-select" id="global-fiscal-year-select" onchange="handleGlobalYearChange(this.value)">
+              <option value="69">ปีงบประมาณ 2569 (เป้าหมายปัจจุบัน)</option>
+              <option value="68" selected>ปีงบประมาณ 2568 (ผลงานล่าสุด)</option>
+              <option value="67">ปีงบประมาณ 2567 (ขยายผล)</option>
+              <option value="66">ปีงบประมาณ 2566 (ฐานตั้งต้น)</option>
+              <option value="70">ปีงบประมาณ 2570 (แผน 5 ปี)</option>
+              <option value="all">ภาพรวมทุกปี (2566–2570)</option>
+            </select>
+          </div>
+
+          <!-- Real-Time Sync Status Pill -->
+          <div class="sync-status-pill" id="sync-status-pill" onclick="fetchLiveData(true)" title="คลิกเพื่อซิงค์ข้อมูลล่าสุดจาก Google Sheet">
+            <div class="pulse-dot"></div>
+            <span class="sync-text">อัปเดตล่าสุดเรียลไทม์</span>
+          </div>
+
+          <!-- Quick Action: Export PDF Report -->
+          <button class="btn btn-secondary btn-header-quick" onclick="printOnePageLandscapeReport()" title="พิมพ์รายงานสรุปผลการดำเนินงาน (One Page 16:9 แนวนอน)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>รายงาน PDF</span>
+          </button>
+
+          <!-- Theme Toggle -->
+          <button class="btn btn-icon" id="theme-toggle-btn" title="สลับโหมดการแสดงผล สว่าง / มืด">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"></circle>
+            </svg>
+          </button>
+
+          <!-- User Profile Badge -->
+          <div class="user-profile-badge" title="ผู้บริหาร สำนักงานสาธารณสุขจังหวัดขอนแก่น">
+            <div class="user-avatar">สสจ</div>
+            <div class="user-info">
+              <span class="user-name">ผู้บริหาร</span>
+              <span class="user-role">สสจ.ขอนแก่น</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Workspace Container -->
+      <main class="main-content">
+        
+        <!-- ===================================================================
+             VIEW 1: EXECUTIVE OVERVIEW (ภาพรวมผู้บริหาร)
+             =================================================================== -->
+        <section class="tab-pane active" id="tab-overview">
+          <!-- Stat Cards Grid -->
+          <div class="overview-stats-grid">
+            <div class="stat-card card-primary">
+              <div class="stat-card-header">
+                <span>จำนวนตัวชี้วัดทั้งหมด</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              </div>
+              <div class="stat-card-value" id="stat-total-kpis">43</div>
+              <div class="stat-card-footer">ครอบคลุม 5 ยุทธศาสตร์ 10 เป้าประสงค์หลัก</div>
+            </div>
+
+            <div class="stat-card card-info">
+              <div class="stat-card-header">
+                <span>ร้อยละความสำเร็จโดยรวม</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+              <div class="stat-card-value" id="stat-pass-rate" style="color: var(--teal-light);">78.4%</div>
+              <div class="stat-card-footer">คำนวณตามเกณฑ์และทิศทางของตัวชี้วัด</div>
+            </div>
+
+            <div class="stat-card card-pass">
+              <div class="stat-card-header">
+                <span>บรรลุเป้าหมาย (Passed)</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div class="stat-card-value" id="stat-passed-kpis" style="color: var(--status-pass);">29</div>
+              <div class="stat-card-footer">ผลการดำเนินงานบรรลุตามเกณฑ์เป้าหมาย</div>
+            </div>
+
+            <div class="stat-card card-warn">
+              <div class="stat-card-header">
+                <span>ระดับเฝ้าระวัง (Warning)</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              </div>
+              <div class="stat-card-value" id="stat-warn-kpis" style="color: var(--status-warn);">6</div>
+              <div class="stat-card-footer">ผลงานอยู่ในช่วงใกล้เคียงเป้าหมาย (90–99%)</div>
+            </div>
+
+            <div class="stat-card card-fail">
+              <div class="stat-card-header">
+                <span>ต้องเร่งรัด (Action Needed)</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              </div>
+              <div class="stat-card-value" id="stat-failed-kpis" style="color: var(--status-fail);">5</div>
+              <div class="stat-card-footer">ต้องกำหนดมาตรการขับเคลื่อนเชิงรุก</div>
+            </div>
+          </div>
+
+          <!-- Strategic Pillars Health Progress -->
+          <div class="section-title-wrap">
+            <div class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span>สถานะความก้าวหน้ารายยุทธศาสตร์หลัก (5 Strategic Pillars)</span>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">คลิกที่การ์ดยุทธศาสตร์เพื่อเจาะลึกตัวชี้วัด</span>
+          </div>
+
+          <div class="strategies-summary-grid" id="strategy-summary-grid">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             VIEW 2: STRATEGIC PILLARS & ISSUES (ยุทธศาสตร์และประเด็น)
+             =================================================================== -->
+        <section class="tab-pane" id="tab-pillars">
+          <div class="section-title-wrap">
+            <div class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span>โครงสร้าง 5 ยุทธศาสตร์และประเด็นสำคัญ (Strategic Pillars & Key Issues)</span>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">แผนยุทธศาสตร์สาธารณสุขจังหวัดขอนแก่น 2566–2570 (ฉบับทบทวน พ.ศ. 2569)</span>
+          </div>
+
+          <div class="pillars-deep-grid">
+            
+            <!-- Pillar 1 -->
+            <div class="pillar-deep-card">
+              <div class="pillar-deep-header">
+                <div class="pillar-badge-num">ยุทธศาสตร์ที่ 1</div>
+                <h3>ส่งเสริมสุขภาพ ป้องกันโรค และคุ้มครองผู้บริโภค (PP&P)</h3>
+              </div>
+              <p class="pillar-deep-desc">มุ่งเน้นการส่งเสริมสุขภาพทุกกลุ่มวัย การลดพฤติกรรมเสี่ยง คัดกรองโรคไม่ติดต่อ มะเร็ง และสร้างเมืองสิ่งแวดล้อมสุขภาพดี</p>
+              <div class="pillar-issues-box">
+                <div class="pillar-issue-item">📌 <strong>เป้าประสงค์ 1:</strong> ประชาชนมีความรอบรู้และพฤติกรรมสุขภาพที่ถูกต้อง (BMI, Health Literacy)</div>
+                <div class="pillar-issue-item">📌 <strong>เป้าประสงค์ 2:</strong> ลดอัตราการป่วยและตายจากโรคที่ป้องกันได้ (แม่และเด็ก, มะเร็ง, วัณโรค, NCDs)</div>
+                <div class="pillar-issue-item">📌 <strong>เป้าประสงค์ 3:</strong> สถานพยาบาลผ่านเกณฑ์ Green & Clean Hospital ครบทุกระดับ</div>
+              </div>
+              <div class="pillar-deep-footer">
+                <span>จำนวน 19 ตัวชี้วัด</span>
+                <button class="btn btn-secondary btn-sm" onclick="filterBySpecificStrategy('ยุทธศาสตร์ที่ 1')">เจาะลึกตัวชี้วัด &rarr;</button>
+              </div>
+            </div>
+
+            <!-- Pillar 2 -->
+            <div class="pillar-deep-card">
+              <div class="pillar-deep-header">
+                <div class="pillar-badge-num">ยุทธศาสตร์ที่ 2</div>
+                <h3>บริการเป็นเลิศ (Service Excellence)</h3>
+              </div>
+              <p class="pillar-deep-desc">พัฒนาระบบบริการสุขภาพให้มีคุณภาพ มีประสิทธิภาพ ประชาชนเข้าถึงระบบบริการทุกระดับ ทั่วถึง ไร้รอยต่อ และเป็นธรรม</p>
+              <div class="pillar-issues-box">
+                <div class="pillar-issue-item">📌 <strong>เป้าประสงค์ 4:</strong> ระบบบริการสุขภาพปฐมภูมิ-ทุติยภูมิ-ตติยภูมิได้มาตรฐาน มีระบบส่งต่อไร้รอยต่อ (Stroke, Sepsis, วัณโรค, NCDs, IMC, AMR, แพทย์แผนไทย)</div>
+                <div class="pillar-issue-item">📌 <strong>เป้าประสงค์ 5:</strong> ประชาชนได้รับบริการปฐมภูมิที่มีคุณภาพ (พ.ร.บ.สุขภาพปฐมภูมิ 2562 และ Telemedicine)</div>
+              </div>
+              <div class="pillar-deep-footer">
+                <span>จำนวน 13 ตัวชี้วัด</span>
+                <button class="btn btn-secondary btn-sm" onclick="filterBySpecificStrategy('ยุทธศาสตร์ที่ 2')">เจาะลึกตัวชี้วัด &rarr;</button>
+              </div>
+            </div>
+
+            <!-- Pillar 3 -->
+            <div class="pillar-deep-card">
+              <div class="pillar-deep-header">
+                <div class="pillar-badge-num">ยุทธศาสตร์ที่ 3</div>
+                <h3>บุคลากรเป็นเลิศ (People Excellence)</h3>
+              </div>
+              <p class="pillar-deep-desc">พัฒนาบุคลากรให้มีสมรรถนะมีความสุขในการทำงาน และส่งเสริมการมีส่วนร่วมทุกภาคส่วนในการดูแลและจัดการระบบสุขภาพ</p>
+              <div class="pillar-issues-box">
+                <div class="pillar-issue-item">📌 <strong>เป้าประสงค์ 6:</strong> บุคลากรทางการแพทย์และสาธารณสุขทุกระดับมีขีดความสามารถในการพัฒนาบริการสู่ความเป็นเลิศ (สมรรถนะ สสอ. & เครือข่ายบริการสุขภาพ)</div>
+              </div>
+              <div class="pillar-deep-footer">
+                <span>จำนวน 2 ตัวชี้วัด</span>
+                <button class="btn btn-secondary btn-sm" onclick="filterBySpecificStrategy('ยุทธศาสตร์ที่ 3')">เจาะลึกตัวชี้วัด &rarr;</button>
+              </div>
+            </div>
+
+            <!-- Pillar 4 -->
+            <div class="pillar-deep-card">
+              <div class="pillar-deep-header">
+                <div class="pillar-badge-num">ยุทธศาสตร์ที่ 4</div>
+                <h3>บริหารเป็นเลิศด้วยธรรมาภิบาล (Governance Excellence)</h3>
+              </div>
+              <p class="pillar-deep-desc">การพัฒนาองค์กรสาธารณสุขให้มีสมรรถนะสูง บริการด้วยความทันสมัยและธรรมาภิบาล</p>
+              <div class="pillar-issues-box">
+                <div class="pillar-issue-item">📌 <strong>เป้าประสงค์ 7:</strong> เทคโนโลยี นวัตกรรมทางการแพทย์ที่ทันสมัย (งานวิจัย/R2R, Smart Hospital & Cyber Security)</div>
+                <div class="pillar-issue-item">📌 <strong>เป้าประสงค์ 8:</strong> หน่วยงานและสถานบริการสุขภาพผ่านการรับรองคุณภาพมาตรฐาน (HA รพศ./รพช./F3, Smart สสอ. คุ้มครองผู้บริโภค)</div>
+                <div class="pillar-issue-item">📌 <strong>เป้าประสงค์ 9:</strong> มีการบริหารจัดการที่มีประสิทธิภาพ โปร่งใส ตรวจสอบได้ (การบริหารการเงินการคลัง CFO)</div>
+              </div>
+              <div class="pillar-deep-footer">
+                <span>จำนวน 7 ตัวชี้วัด</span>
+                <button class="btn btn-secondary btn-sm" onclick="filterBySpecificStrategy('ยุทธศาสตร์ที่ 4')">เจาะลึกตัวชี้วัด &rarr;</button>
+              </div>
+            </div>
+
+            <!-- Pillar 5 -->
+            <div class="pillar-deep-card">
+              <div class="pillar-deep-header">
+                <div class="pillar-badge-num">ยุทธศาสตร์ที่ 5</div>
+                <h3>ส่งเสริมการท่องเที่ยวเชิงสุขภาพความงาม และแพทย์แผนไทย (Health-Related Economy)</h3>
+              </div>
+              <p class="pillar-deep-desc">ประชาชนและนักท่องเที่ยวได้รับการคุ้มครองด้านสุขภาพและบริการ รวมถึงเพิ่มมูลค่าสินค้าและบริการทางสุขภาพ</p>
+              <div class="pillar-issues-box">
+                <div class="pillar-issue-item">📌 <strong>เป้าประสงค์ 10:</strong> ประชาชนและนักท่องเที่ยวได้รับการคุ้มครองด้านสุขภาพและบริการ รวมถึงเพิ่มมูลค่าสินค้าและบริการทางสุขภาพ (ผลิตภัณฑ์สุขภาพ & สถานประกอบการ)</div>
+              </div>
+              <div class="pillar-deep-footer">
+                <span>จำนวน 1 ตัวชี้วัด</span>
+                <button class="btn btn-secondary btn-sm" onclick="filterBySpecificStrategy('ยุทธศาสตร์ที่ 5')">เจาะลึกตัวชี้วัด &rarr;</button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             VIEW 3: KPI DRILL-DOWN (ตัวชี้วัด 43 รายการ)
+             =================================================================== -->
+        <section class="tab-pane" id="tab-kpi-list">
+          <!-- Filter Toolbar -->
+          <div class="filter-toolbar">
+            <div class="filter-group">
+              <div class="search-input-wrap">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="kpi-search-input" placeholder="ค้นหาชื่อตัวชี้วัด, กลุ่มโรค, รหัส, หรือหมายเหตุ...">
+              </div>
+
+              <select class="select-filter" id="strategy-filter-select">
+                <option value="all">ทุกยุทธศาสตร์ (ยุทธศาสตร์ที่ 1 - 5)</option>
+                <option value="ยุทธศาสตร์ที่ 1">ยุทธศาสตร์ที่ 1: ส่งเสริมสุขภาพ ป้องกัน ควบคุมโรค ภัยสุขภาพ อนามัยสิ่งแวดล้อม และคุ้มครองผู้บริโภค</option>
+                <option value="ยุทธศาสตร์ที่ 2">ยุทธศาสตร์ที่ 2: บริการเป็นเลิศ (Service Excellence)</option>
+                <option value="ยุทธศาสตร์ที่ 3">ยุทธศาสตร์ที่ 3: บุคลากรเป็นเลิศ (People Excellence)</option>
+                <option value="ยุทธศาสตร์ที่ 4">ยุทธศาสตร์ที่ 4: บริหารเป็นเลิศด้วยธรรมาภิบาล (Governance Excellence)</option>
+                <option value="ยุทธศาสตร์ที่ 5">ยุทธศาสตร์ที่ 5: ส่งเสริมการท่องเที่ยวเชิงสุขภาพความงาม และแพทย์แผนไทย</option>
+              </select>
+
+              <select class="select-filter" id="status-filter-select">
+                <option value="all">ทุกสถานะการประเมินผล</option>
+                <option value="pass">🟢 บรรลุเป้าหมาย (Passed)</option>
+                <option value="warn">🟡 ระดับเฝ้าระวัง (Warning)</option>
+                <option value="fail">🔴 ต้องเร่งรัดการดำเนินงาน (Action Needed)</option>
+                <option value="pending">🔵 อยู่ระหว่างประมวลผล / ตัวชี้วัดใหม่</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <span id="kpi-filtered-count" style="font-size: 0.82rem; color: var(--text-muted); font-weight: 500;">43 รายการ</span>
+              <div class="view-toggle-btns">
+                <button class="view-btn" id="view-grid-btn" title="มุมมองการ์ด (Card View)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                </button>
+                <button class="view-btn active" id="view-table-btn" title="มุมมองตารางสรุป (Table View)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI Cards / Table Container -->
+          <div id="kpi-display-container" class="table-responsive-container">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             VIEW 4: AI STRATEGY & PREDICTION CENTER (วิเคราะห์ด้วย AI)
+             =================================================================== -->
+        <section class="tab-pane" id="tab-ai-center">
+          
+          <!-- AI Engine Status Banner -->
+          <div class="ai-status-banner" id="ai-engine-status-panel">
+            <div class="ai-status-item">
+              <span class="ai-status-label">AI Engine Model:</span>
+              <span class="ai-status-value" id="status-model-name">Gemini Auto Model</span>
+            </div>
+            <div class="ai-status-item">
+              <span class="ai-status-label">Mode:</span>
+              <span class="ai-status-value"><span class="badge-status pass">AUTO DISCOVERY</span></span>
+            </div>
+            <div class="ai-status-item">
+              <span class="ai-status-label">Free Tier Status:</span>
+              <span class="ai-status-value" style="color: var(--status-pass); font-weight: 700;">🟢 AVAILABLE</span>
+            </div>
+            <div class="ai-status-item">
+              <span class="ai-status-label">Prediction Engine:</span>
+              <span class="ai-status-value" style="color: var(--cyan-light); font-weight: 700;">READY (Statistical + LLM)</span>
+            </div>
+            <div class="ai-status-item">
+              <span class="ai-status-label">Last Model Check:</span>
+              <span class="ai-status-value" id="status-last-check">-</span>
+            </div>
+          </div>
+
+          <div class="section-title-wrap">
+            <div class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span>AI Strategic Intelligence & Prediction Center</span>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">ระบบพยากรณ์เชิงสถิติ 3 Scenarios ผสาน AI Strategic Reasoning สสจ.ขอนแก่น</span>
+          </div>
+
+          <div class="ai-center-grid">
+            <!-- Left: KPI Selector & Parameters -->
+            <div class="dashboard-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span>🎯 เลือกตัวชี้วัดและกำหนดค่าการพยากรณ์</span>
+                </div>
+              </div>
+              
+              <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                <div class="form-group">
+                  <label class="form-label">เลือกตัวชี้วัดเชิงยุทธศาสตร์ที่ต้องการพยากรณ์:</label>
+                  <select class="form-control" id="ai-center-kpi-select" onchange="onAICenterKPISelected(this.value)">
+                    <!-- Populated by JS -->
+                  </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                  <div class="form-group">
+                    <label class="form-label">ช่วงเวลาคาดการณ์ (Horizon):</label>
+                    <select class="form-control" id="ai-center-horizon-select">
+                      <option value="1" selected>1 ปีงบประมาณ (เป้าหมาย 2569)</option>
+                      <option value="2">2 ปีงบประมาณ (เป้าหมาย 2570)</option>
+                      <option value="5">แผนระยะยาว 5 ปี (2566–2570)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Data Quality Check:</label>
+                    <div id="ai-center-data-quality-badge" style="padding: 0.55rem; background: var(--bg-surface-elevated); border: 1px solid var(--border-card); border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 700; color: var(--status-pass);">
+                      🟢 ข้อมูลสมบูรณ์ (3 ปีต่อเนื่อง)
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">ประเด็นเน้นย้ำเชิงกลยุทธ์ (Optional Strategic Focus):</label>
+                  <textarea class="form-control" id="ai-center-custom-prompt" rows="2" placeholder="เช่น วิเคราะห์ความพร้อมของ 26 อำเภอ หรือแนวทางจัดสรรงบประมาณ พชอ. Plus..."></textarea>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.25rem;">
+                  <button class="btn btn-primary" id="btn-run-ai-center" onclick="triggerAICenterAnalysis()" style="width: 100%; justify-content: center; padding: 0.65rem;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    <span>✨ AI Predict & Analyze</span>
+                  </button>
+                  <div class="ai-model-subtag" id="ai-model-subtag-text">
+                    Model: Auto Dynamic • Mode: Auto • Free Tier Active
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mini Statistical Indicators for Selected KPI -->
+              <div class="ai-kpi-quick-stats" id="ai-kpi-quick-stats" style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border-card);">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <!-- Right: 5-Section Executive AI Brief & Scenario Prediction -->
+            <div class="dashboard-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span>📊 Executive AI Brief & Strategic Decision Support</span>
+                </div>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button class="btn btn-secondary btn-sm" onclick="copyAICenterResult()">📋 คัดลอกผลสรุป</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openAuditLogModal()">📜 Audit Log</button>
+                </div>
+              </div>
+
+              <div id="ai-center-output-box" class="ai-center-result-box">
+                <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 3rem 1.5rem;">
+                  เลือกตัวชี้วัดด้านซ้ายแล้วกด <strong>"✨ AI Predict & Analyze"</strong><br>
+                  เพื่อประมวลผลการพยากรณ์ 3 Scenarios, ความน่าจะเป็น, และข้อเสนอเพื่อการตัดสินใจของผู้บริหาร
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             VIEW 7: EXECUTIVE REPORTS (รายงานสรุป)
+             =================================================================== -->
+        <section class="tab-pane" id="tab-reports">
+          <div class="section-title-wrap">
+            <div class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <span>รายงานสรุปผลการดำเนินงานสำหรับผู้บริหาร (Executive Performance Reports)</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-primary btn-sm" onclick="window.print()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                <span>พิมพ์รายงานสรุป (PDF)</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="report-matrix-panel">
+            <div class="report-matrix-header">
+              <h3>ตารางสรุปสถานะตัวชี้วัด 43 รายการ (ปี 2566–2570)</h3>
+              <p>สำนักงานสาธารณสุขจังหวัดขอนแก่น | แผนยุทธศาสตร์สาธารณสุข พ.ศ. 2566–2570 (ฉบับทบทวน พ.ศ. 2569)</p>
+            </div>
+            <div id="report-matrix-container" class="table-responsive-container">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             VIEW 8: SYSTEM SETTINGS & AI MODEL REGISTRY (ตั้งค่า)
+             =================================================================== -->
+        <section class="tab-pane" id="tab-settings">
+          <div class="section-title-wrap">
+            <div class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>ตั้งค่าระบบและการจัดการโมเดล AI (System & AI Model Registry)</span>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <!-- Dynamic AI Model Registry Management -->
+            <div class="dashboard-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span>🤖 Gemini Model Strategy & Discovery</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="checkGeminiModelUpdates()">🔄 ตรวจสอบรุ่นใหม่</button>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">โหมดการเลือกโมเดล (Model Selection Mode):</label>
+                <select class="form-control" id="setting-ai-mode" onchange="updateAIModelSelectionMode(this.value)">
+                  <option value="AUTO" selected>Auto Dynamic Discovery (แนะนำ - เลือก Free Tier ที่ดีที่สุด)</option>
+                  <option value="PRIMARY_ONLY">Primary Model Enforced</option>
+                </select>
+              </div>
+
+              <div class="ai-model-catalog-list" id="ai-model-catalog-container">
+                <!-- Populated dynamically by GeminiModelManager -->
+              </div>
+            </div>
+
+            <!-- Google Sheets Integration Card -->
+            <div class="dashboard-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span>📊 การเชื่อมต่อฐานข้อมูล Google Sheets</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Google Apps Script Web App URL (Optional):</label>
+                <input type="text" class="form-control" id="setting-gas-url" placeholder="https://script.google.com/macros/s/.../exec">
+                <small style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 0.35rem;">
+                  ระบบจะซิงค์ข้อมูลผ่าน Google Sheets GViz อัตโนมัติในพื้นหลังโดยไม่ต้องตั้งค่าเพิ่มเติม
+                </small>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ความถี่ในการซิงค์ข้อมูลอัตโนมัติ (Auto-Sync Interval):</label>
+                <select class="form-control" id="setting-sync-interval">
+                  <option value="0">ปิดการซิงค์อัตโนมัติ (Manual Sync Only)</option>
+                  <option value="30">ทุก 30 วินาที</option>
+                  <option value="60" selected>ทุก 1 นาที</option>
+                  <option value="300">ทุก 5 นาที</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" onclick="saveSettings()">บันทึกการตั้งค่า Google Sheets</button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Modal: KPI Detail & Insight Modal -->
+    <div class="modal-backdrop" id="kpi-detail-modal">
+      <div class="modal-dialog" id="kpi-insight-dialog">
+        <!-- Content dynamically generated by renderKPIDetailModal in app.js -->
+      </div>
+    </div>
+
+    <!-- Modal: AI Prediction Audit Log -->
+    <div class="modal-backdrop" id="ai-audit-log-modal">
+      <div class="modal-dialog" style="max-width: 860px; height: auto; max-height: 85vh; padding: 0;">
+        <div class="modal-insight-header">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.25rem;">📜</span>
+            <h3 style="margin: 0; font-size: 1.05rem; color: #ffffff;">AI Prediction Engine - Audit Log</h3>
+          </div>
+          <button class="modal-close-btn-white" onclick="closeAuditLogModal()">&times;</button>
+        </div>
+        <div style="padding: 1.25rem; background: var(--bg-surface); overflow-y: auto; max-height: 70vh;">
+          <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+            ประวัติการพยากรณ์และวิเคราะห์ยุทธศาสตร์ พร้อมบันทึก Hash ข้อมูล, Model Version, และ Confidence Score สำหรับตรวจสอบย้อนหลัง
+          </p>
+          <div id="ai-audit-log-table-container">
+            <!-- Rendered by AIAuditLogger in app.js -->
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+            <button class="btn btn-secondary btn-sm" onclick="clearAuditLog()">ล้างประวัติ</button>
+            <button class="btn btn-primary btn-sm" onclick="closeAuditLogModal()">ปิดหน้าต่าง</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Fullscreen Executive AI Prediction Modal -->
+    <div class="modal-backdrop" id="ai-prediction-fullscreen-modal">
+      <div class="modal-dialog modal-fullscreen-ai-dialog" id="ai-prediction-fullscreen-dialog">
+        <!-- Content dynamically rendered by openAIPredictionFullscreenModal in app.js -->
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

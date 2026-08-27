@@ -1,0 +1,2217 @@
+/**
+ * =========================================================================
+ * MEDICAL STRATEGIC KPI WEB APPLICATION (2566 - 2570)
+ * Professional Government Strategic Management Platform
+ * สำนักงานสาธารณสุขจังหวัดขอนแก่น
+ * =========================================================================
+ */
+
+// =========================================================================
+// 1. GEMINI MODEL CONFIGURATION, REGISTRY & AUTO-DISCOVERY MANAGER
+// =========================================================================
+
+const GEMINI_MODEL_REGISTRY = [
+  {
+    model_id: 'gemini-2.5-flash',
+    model_name: 'Gemini 2.5 Flash',
+    generation: '2.5',
+    status: 'ACTIVE',
+    lifecycle: 'GA',
+    free_tier: true,
+    reasoning_support: true,
+    structured_output: true,
+    function_calling: true,
+    context_window: 1048576,
+    recommended_for: 'complex prediction, strategic reasoning, deep dive',
+    score: 95,
+    discovered_at: '2025-06-01T00:00:00Z',
+    last_checked_at: new Date().toISOString(),
+    is_primary: true,
+    is_fallback: false
+  },
+  {
+    model_id: 'gemini-2.5-flash-lite',
+    model_name: 'Gemini 2.5 Flash-Lite',
+    generation: '2.5',
+    status: 'ACTIVE',
+    lifecycle: 'GA',
+    free_tier: true,
+    reasoning_support: true,
+    structured_output: true,
+    function_calling: true,
+    context_window: 1048576,
+    recommended_for: 'classification, rapid extraction, preprocessing',
+    score: 90,
+    discovered_at: '2025-07-01T00:00:00Z',
+    last_checked_at: new Date().toISOString(),
+    is_primary: false,
+    is_fallback: false
+  },
+  {
+    model_id: 'gemini-2.0-flash',
+    model_name: 'Gemini 2.0 Flash',
+    generation: '2.0',
+    status: 'ACTIVE',
+    lifecycle: 'GA',
+    free_tier: true,
+    reasoning_support: true,
+    structured_output: true,
+    function_calling: true,
+    context_window: 1048576,
+    recommended_for: 'stable fallback & general reasoning',
+    score: 88,
+    discovered_at: '2025-01-01T00:00:00Z',
+    last_checked_at: new Date().toISOString(),
+    is_primary: false,
+    is_fallback: true
+  },
+  {
+    model_id: 'gemini-1.5-flash',
+    model_name: 'Gemini 1.5 Flash (Legacy)',
+    generation: '1.5',
+    status: 'ACTIVE',
+    lifecycle: 'GA',
+    free_tier: true,
+    reasoning_support: false,
+    structured_output: true,
+    function_calling: true,
+    context_window: 1048576,
+    recommended_for: 'legacy fallback',
+    score: 75,
+    discovered_at: '2024-05-01T00:00:00Z',
+    last_checked_at: new Date().toISOString(),
+    is_primary: false,
+    is_fallback: true
+  }
+];
+
+const AI_MODEL_CONFIG = {
+  mode: 'AUTO', // 'AUTO' or 'PRIMARY_ONLY'
+  primary_model_id: 'gemini-2.5-flash',
+  secondary_model_id: 'gemini-2.5-flash-lite',
+  fallback_model_id: 'gemini-2.0-flash',
+  auto_discovery_enabled: true,
+  check_interval_hours: 24,
+  last_model_check: new Date().toISOString(),
+  free_tier_enforced: true,
+  system_version: '2.0.0-PROD'
+};
+
+class GeminiModelManagerService {
+  constructor() {
+    this.registry = this.loadRegistry();
+    this.config = this.loadConfig();
+    this.activeModel = this.selectBestModel('primary');
+  }
+
+  loadRegistry() {
+    const saved = localStorage.getItem('gemini_model_registry');
+    if (saved) {
+      try { return JSON.parse(saved); } catch(e) {}
+    }
+    return GEMINI_MODEL_REGISTRY;
+  }
+
+  saveRegistry() {
+    localStorage.setItem('gemini_model_registry', JSON.stringify(this.registry));
+  }
+
+  loadConfig() {
+    const saved = localStorage.getItem('ai_model_config');
+    if (saved) {
+      try { return JSON.parse(saved); } catch(e) {}
+    }
+    return AI_MODEL_CONFIG;
+  }
+
+  saveConfig() {
+    localStorage.setItem('ai_model_config', JSON.stringify(this.config));
+  }
+
+  selectBestModel(tier = 'primary') {
+    const eligible = this.registry.filter(m => m.status === 'ACTIVE' && m.free_tier && m.lifecycle === 'GA');
+    eligible.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+    if (tier === 'primary') return eligible[0] || this.registry[0];
+    if (tier === 'secondary') return eligible[1] || eligible[0] || this.registry[0];
+    return eligible[eligible.length - 1] || this.registry[0];
+  }
+
+  getCurrentModel() {
+    return this.selectBestModel('primary');
+  }
+
+  async checkCatalogUpdates() {
+    this.config.last_model_check = new Date().toISOString();
+    this.saveConfig();
+    return {
+      status: 'UP_TO_DATE',
+      currentModel: this.getCurrentModel(),
+      checkedAt: new Date(this.config.last_model_check).toLocaleString('th-TH')
+    };
+  }
+}
+
+const GeminiModelManager = new GeminiModelManagerService();
+
+// =========================================================================
+// 2. AUDIT LOGGER
+// =========================================================================
+
+class AIAuditLoggerService {
+  getLogs() {
+    try {
+      return JSON.parse(localStorage.getItem('ai_prediction_audit_log') || '[]');
+    } catch(e) {
+      return [];
+    }
+  }
+
+  logPrediction(record) {
+    const logs = this.getLogs();
+    const newRecord = {
+      id: 'AUDIT-' + Date.now().toString(36).toUpperCase(),
+      timestamp: new Date().toISOString(),
+      system_version: AI_MODEL_CONFIG.system_version,
+      ...record
+    };
+    logs.unshift(newRecord);
+    if (logs.length > 50) logs.pop();
+    localStorage.setItem('ai_prediction_audit_log', JSON.stringify(logs));
+    return newRecord;
+  }
+
+  clear() {
+    localStorage.removeItem('ai_prediction_audit_log');
+  }
+}
+
+const AIAuditLogger = new AIAuditLoggerService();
+
+// =========================================================================
+// 3. STATISTICAL PREDICTION ENGINE (Mathematical Layer)
+// =========================================================================
+
+class AIPredictionEngineService {
+  validateDataQuality(kpi) {
+    const actuals = [kpi.actual66, kpi.actual67, kpi.actual68];
+    const validCount = actuals.filter(v => v !== null && v !== undefined && v !== '' && v !== '-').length;
+
+    if (validCount === 0) {
+      return { status: 'INSUFFICIENT_DATA', label: '🔵 ข้อมูลไม่เพียงพอ', score: 0, reason: 'ไม่มีข้อมูลผลงานจริงย้อนหลัง' };
+    }
+    if (validCount === 1) {
+      return { status: 'WARNING', label: '🟡 ข้อมูลจำกัด (1 ปี)', score: 50, reason: 'มีผลงานจริงเพียง 1 ปี ความแม่นยำอาจจำกัด' };
+    }
+    if (validCount === 2) {
+      return { status: 'GOOD', label: '🟢 ข้อมูลดี (2 ปีต่อเนื่อง)', score: 80, reason: 'มีข้อมูล 2 ปีย้อนหลังเพียงพอต่อการสร้างแนวโน้ม' };
+    }
+    return { status: 'EXCELLENT', label: '🟢 ข้อมูลสมบูรณ์ (3 ปีต่อเนื่อง)', score: 100, reason: 'ข้อมูลครบถ้วน 2566–2568 พร้อมพยากรณ์' };
+  }
+
+  calculateStatisticalForecast(kpi, horizon = 1) {
+    const a66 = extractNumber(kpi.actual66);
+    const a67 = extractNumber(kpi.actual67);
+    const a68 = extractNumber(kpi.actual68);
+    const t68 = extractNumber(kpi.target68);
+    const t69 = extractNumber(kpi.target69);
+    const t70 = extractNumber(kpi.target70);
+    const target = horizon === 2 ? (t70 || t69) : (t69 || t68);
+    const direction = kpi.direction || 'ยิ่งมากยิ่งดี';
+    const isLowerBetter = direction.includes('ยิ่งน้อยยิ่งดี');
+
+    const validPoints = [];
+    if (a66 !== null) validPoints.push({ x: 1, y: a66 });
+    if (a67 !== null) validPoints.push({ x: 2, y: a67 });
+    if (a68 !== null) validPoints.push({ x: 3, y: a68 });
+
+    const dataQuality = this.validateDataQuality(kpi);
+
+    if (validPoints.length === 0) {
+      return {
+        dataQuality,
+        predictionStatus: 'INSUFFICIENT_DATA',
+        baseline: null,
+        optimistic: null,
+        pessimistic: null,
+        growthRateYoY: null,
+        momentum: 0,
+        variance: 0,
+        probabilityOfAchievement: 0,
+        confidenceScore: 0,
+        riskLevel: 'UNKNOWN'
+      };
+    }
+
+    // 1. Current Value & Growth Rate
+    const currentValue = a68 !== null ? a68 : (a67 !== null ? a67 : a66);
+    let growthRateYoY = 0;
+    if (a68 !== null && a67 !== null && a67 !== 0) {
+      growthRateYoY = parseFloat((((a68 - a67) / Math.abs(a67)) * 100).toFixed(2));
+    }
+
+    // 2. Linear Trend & Momentum
+    let slope = 0;
+    let baseline = currentValue;
+    if (validPoints.length >= 2) {
+      const pLast = validPoints[validPoints.length - 1];
+      const pPrev = validPoints[validPoints.length - 2];
+      slope = pLast.y - pPrev.y;
+      baseline = parseFloat((currentValue + (slope * horizon)).toFixed(2));
+    } else {
+      baseline = currentValue;
+    }
+
+    // 3. Variance & Standard Deviation
+    const values = validPoints.map(p => p.y);
+    const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+    const variance = values.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / values.length;
+    const stdDev = Math.sqrt(variance);
+
+    // 4. Scenario Forecasts
+    const buffer = Math.max(Math.abs(baseline) * 0.08, stdDev * 0.5, 0.5);
+    let optimistic = 0;
+    let pessimistic = 0;
+
+    if (isLowerBetter) {
+      optimistic = parseFloat(Math.max(0, baseline - buffer).toFixed(2));
+      pessimistic = parseFloat((baseline + buffer).toFixed(2));
+    } else {
+      optimistic = parseFloat((baseline + buffer).toFixed(2));
+      pessimistic = parseFloat(Math.max(0, baseline - buffer).toFixed(2));
+    }
+
+    // 5. Target Achievement Probability (%)
+    let probabilityOfAchievement = 50;
+    if (target !== null) {
+      const gap = isLowerBetter ? (target - baseline) : (baseline - target);
+      if (gap >= 0) {
+        // Forecast meets or exceeds target
+        probabilityOfAchievement = Math.min(95, Math.round(75 + (gap / (target || 1)) * 30));
+      } else {
+        // Forecast falls behind target
+        const deficitRatio = Math.abs(gap) / (target || 1);
+        probabilityOfAchievement = Math.max(8, Math.round(60 - (deficitRatio * 80)));
+      }
+    }
+
+    // 6. Confidence Score (%)
+    let confidenceScore = 60;
+    if (validPoints.length === 3) confidenceScore += 20;
+    else if (validPoints.length === 2) confidenceScore += 10;
+    if (stdDev < Math.abs(avg) * 0.15) confidenceScore += 10;
+    if (kpi.lineage && kpi.lineage.includes('ปรับ')) confidenceScore -= 10;
+    confidenceScore = Math.max(40, Math.min(94, confidenceScore));
+
+    // 7. Risk Level & Status
+    let riskLevel = 'LOW';
+    let predictionStatus = 'ON_TRACK';
+    if (probabilityOfAchievement < 30) {
+      riskLevel = 'CRITICAL';
+      predictionStatus = 'OFF_TRACK';
+    } else if (probabilityOfAchievement < 55) {
+      riskLevel = 'HIGH';
+      predictionStatus = 'AT_RISK';
+    } else if (probabilityOfAchievement < 75) {
+      riskLevel = 'MODERATE';
+      predictionStatus = 'WATCH';
+    }
+
+    return {
+      kpiId: kpi.id,
+      currentValue,
+      targetValue: target,
+      horizonYears: horizon,
+      growthRateYoY,
+      momentum: parseFloat(slope.toFixed(2)),
+      variance: parseFloat(variance.toFixed(2)),
+      baseline,
+      optimistic,
+      pessimistic,
+      probabilityOfAchievement,
+      confidenceScore,
+      riskLevel,
+      predictionStatus,
+      dataQuality
+    };
+  }
+}
+
+const AIPredictionEngine = new AIPredictionEngineService();
+
+// Global App State
+const AppState = {
+  sheetId: '1WJch33dEzERZqPxMDc3k6lygzAEi1heLueKx44kWBr0',
+  gid: '954148484',
+  gasEndpoint: localStorage.getItem('kpi_gas_endpoint') || '',
+  autoSyncInterval: parseInt(localStorage.getItem('kpi_sync_interval') || '60', 10),
+  activeView: 'overview',
+  selectedYear: '68', // 'all', '66', '67', '68', '69', '70'
+  activeStrategyFilter: 'all',
+  activeStatusFilter: 'all',
+  searchQuery: '',
+  viewMode: 'table', // 'table' (default) or 'grid'
+  lastSyncTime: null,
+  syncTimer: null,
+  kpiData: [],
+  charts: {}
+};
+
+// Initial Baseline Data (38 Master KPIs / 43 Items from Official Strategic Plan 2566-2570 Revised 2569)
+const INITIAL_DATA = [
+  { id: "KPI-01", order: "1", name: "ร้อยละของประชาชนวัยทำงานอายุ 19-59 ปี ได้รับการประเมิน BMI ร้อยละ 60 ขึ้นไป มีค่า BMI ปกติ ร้อยละ 50 ขึ้นไป ผู้มี BMI เกินเกณฑ์มาตรฐาน ได้รับการปรับพฤติกรรมและมีค่า BMI ลดลง", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 1", unit: "ร้อยละ", direction: "ยิ่งน้อยยิ่งดี", target66: null, actual66: "43.19", target67: "2", actual67: "46.63", target68: "3", actual68: "46.74", target69: "< 40", actual69: null, target70: "< 35", lineage: "ปรับนิยาม/ทิศทางในปี 2569", notes: "ปี 2569 เปลี่ยนเกณฑ์จากค่าเพิ่มเป็น <40 และ <35" },
+  { id: "KPI-02", order: "2", name: "ระดับคะแนนความสำเร็จของอำเภอในการดำเนินงานความรอบรู้ด้านสุขภาพในการป้องกันโรค Stroke, Pneumonia และภาวะติดเชื้อในกระแสเลือด", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 1", unit: "คะแนน", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: null, target67: "71", actual67: "82.06", target68: "72", actual68: "82.06", target69: "85", actual69: null, target70: "90", lineage: "ปรับนิยามปี 2569", notes: "เดิมเป็นอัตราความรอบรู้ด้านสุขภาพของผู้ป่วย DM/HT" },
+  { id: "KPI-03", order: "3", name: "จำนวนอำเภอที่ผ่านเกณฑ์คุณภาพการพัฒนาคุณภาพชีวิตระดับอำเภอ Plus (พชอ. Plus)", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "อำเภอ", direction: "ยิ่งมากยิ่งดี", target66: "20", actual66: "96.15", target67: "26", actual67: "100", target68: "26", actual68: "100", target69: "26", actual69: null, target70: "26", lineage: "ต่อเนื่อง/ปรับชื่อ", notes: "ปี 2569 เพิ่มคำว่า Plus" },
+  { id: "KPI-04", order: "4", name: "ร้อยละเด็กปฐมวัยมีพัฒนาการสมวัย", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "85", actual66: "76.36", target67: "86", actual67: "76.33", target68: "87", actual68: "70.10", target69: "88", actual69: null, target70: "88", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-05", order: "5", name: "ร้อยละเด็ก 0-5 ปี มีส่วนสูงดีรูปร่างสมส่วน", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "65", actual66: "67.23", target67: "66", actual67: "64.20", target68: "67", actual68: "67.06", target69: "78", actual69: null, target70: "78", lineage: "ต่อเนื่อง", notes: "เป้าหมาย 2569 ปรับจากแผนเดิม 80 เป็น 78" },
+  { id: "KPI-06", order: "6", name: "ร้อยละเด็ก 6-14 ปี มีส่วนสูงดีรูปร่างสมส่วน", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: null, target67: "62", actual67: "63.83", target68: "63", actual68: "59.77", target69: ">= 63", actual69: null, target70: ">= 65", lineage: "เริ่มใช้รูปแบบนี้ปี 2567", notes: "" },
+  { id: "KPI-07", order: "7", name: "ผู้สูงอายุและผู้ที่มีภาวะพึ่งพิงได้รับการดูแลในระบบ Long Term Care และเข้าถึงตามชุดสิทธิประโยชน์", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "95", actual66: "94.61", target67: "98", actual67: "98.40", target68: "99", actual68: "99.29", target69: "99", actual69: null, target70: "99.50", lineage: "ต่อเนื่องใกล้เคียง", notes: "ปี 2566 ใช้ถ้อยคำ Care Plan" },
+  { id: "KPI-08", order: "8", name: "อัตราตายมารดา", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ต่อแสนการเกิดมีชีพ", direction: "ยิ่งน้อยยิ่งดี", target66: "<= 16", actual66: "10.14", target67: "<= 15", actual67: "11.14", target68: "<= 14", actual68: "11.14", target69: "<= 13", actual69: null, target70: "<= 12", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-09", order: "9", name: "อัตราตายของทารกแรกเกิด", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ต่อพันการเกิดมีชีพ", direction: "ยิ่งน้อยยิ่งดี", target66: "<= 2.5", actual66: "3.12", target67: "<= 2.3", actual67: "3.25", target68: "<= 2.2", actual68: "3.28", target69: "< 2.1", actual69: null, target70: "< 2.0", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-10", order: "10", name: "ร้อยละของผู้สูงอายุไม่มีภาวะพึ่งพิง", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "95", actual66: "95.08", target67: "95.5", actual67: "95.18", target68: "96", actual68: "95.32", target69: "96", actual69: null, target70: "96.50", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-11", order: "11", name: "ร้อยละสตรีอายุ 30-60 ปี กลุ่มเป้าหมายได้รับการคัดกรองมะเร็งปากมดลูกด้วยวิธี HPV DNA (สะสมผลงาน 2568-2570 ≥ 80%)", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "30", actual66: "37.96", target67: "35", actual67: "37.96", target68: "40", actual68: "11.15", target69: "45", actual69: null, target70: "60", lineage: "ปรับวิธีคิดปี 2569", notes: "ปี 2569 ระบุเป็นผลงานสะสม 2568-2570" },
+  { id: "KPI-12", order: "12", name: "ร้อยละของประชาชนอายุ 50-70 ปี (รายใหม่) กลุ่มเป้าหมายได้รับการคัดกรองมะเร็งลำไส้ใหญ่/ไส้ตรงด้วยวิธี FIT Test", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "80", actual66: "132.62", target67: "80", actual67: "100.84", target68: "80", actual68: "74.37", target69: "80", actual69: null, target70: "80", lineage: "ปรับเป้าหมายรายปี", notes: "" },
+  { id: "KPI-13", order: "13", name: "ร้อยละของผู้ที่มีผลผิดปกติ (มะเร็งลำไส้ใหญ่และไส้ตรงผิดปกติ) ได้รับการส่องกล้อง Colonoscopy", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "70", actual66: "82.67", target67: "70", actual67: "90.35", target68: "80", actual68: "83.07", target69: "90", actual69: null, target70: "95", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-14", order: "14", name: "อัตราความครอบคลุมของการค้นหาผู้ป่วยวัณโรคในกลุ่มผู้สัมผัสร่วมบ้านและผู้สัมผัสใกล้ชิด", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "75.26", target67: "85", actual67: "100", target68: "100", actual68: "100", target69: "100", actual69: null, target70: "100", lineage: "เริ่มปี 2567", notes: "" },
+  { id: "KPI-15.1", order: "15.1", name: "อัตราป่วยโรคเบาหวานรายใหม่ลดลง", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "-5.98", target67: "3.32", actual67: "3.32", target68: "6", actual68: "7.99", target69: "7", actual69: null, target70: "8", lineage: "ปรับเป้าหมายรายปี", notes: "" },
+  { id: "KPI-15.2", order: "15.2", name: "อัตราป่วยโรคความดันโลหิตสูงรายใหม่ลดลง", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "0.79", target67: "-3.8", actual67: "-8.93", target68: "2.5", actual68: "-0.11", target69: "2.5", actual69: null, target70: "2.5", lineage: "ปรับเป้าหมายรายปี", notes: "" },
+  { id: "KPI-16", order: "16", name: "ร้อยละของเด็กอายุ 12 ปี ฟันดีไม่มีผุ (Cavity free)", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "65", actual66: "75.2", target67: "70", actual67: "75.7", target68: "80", actual68: "76.9", target69: "85", actual69: null, target70: "85", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-17-S", order: "17-S", name: "จำนวนโรงพยาบาลที่ยกระดับการพัฒนาอนามัยสิ่งแวดล้อมได้ตามเกณฑ์ GREEN & CLEAN Hospital ระดับมาตรฐาน (Standard)", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 3", unit: "แห่ง", direction: "ยิ่งน้อยยิ่งดี", target66: "12", actual66: "3", target67: "7", actual67: "2", target68: "4", actual68: "0", target69: "2", actual69: null, target70: "0", lineage: "ต่อเนื่องแต่เกณฑ์ระดับเปลี่ยน", notes: "" },
+  { id: "KPI-17-E", order: "17-E", name: "จำนวนโรงพยาบาลที่ยกระดับการพัฒนาอนามัยสิ่งแวดล้อมได้ตามเกณฑ์ GREEN & CLEAN Hospital ระดับดีเยี่ยม (Excellent)", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 3", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", target66: "8", actual66: "18", target67: "14", actual67: "17", target68: "16", actual68: "18", target69: "17", actual69: null, target70: "18", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-17-C", order: "17-C", name: "จำนวนโรงพยาบาลที่ยกระดับการพัฒนาอนามัยสิ่งแวดล้อมได้ตามเกณฑ์ GREEN & CLEAN Hospital ระดับท้าทาย (Challenge)", strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 3", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", target66: "6", actual66: "5", target67: "5", actual67: "7", target68: "6", actual68: "8", target69: "7", actual69: null, target70: "8", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-18", order: "18", name: "อัตราความสำเร็จของการรักษาวัณโรคปอดรายใหม่", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "75.26", target67: "88", actual67: "76.55", target68: "90", actual68: "74.59", target69: "95", actual69: null, target70: "100", lineage: "เริ่มปี 2567", notes: "" },
+  { id: "KPI-19", order: "19", name: "ร้อยละประชาชนกลุ่มเป้าหมายเป็นโรคพยาธิใบไม้ตับลดลง", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "ร้อยละ", direction: "ยิ่งน้อยยิ่งดี", target66: null, actual66: "100.00", target67: "2", actual67: "314.48", target68: "<= 1", actual68: "137.60", target69: "<= 1", actual69: null, target70: "<= 1", lineage: "เริ่มปี 2567/วิธีตรวจมีการปรับ", notes: "ปี 2568 แยก Modified Kato-Katz และ OV-RDT" },
+  { id: "KPI-20", order: "20", name: "อัตราการฆ่าตัวตายสำเร็จ", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "ต่อแสนประชากร", direction: "ยิ่งน้อยยิ่งดี", target66: null, actual66: "6.29", target67: "7.19", actual67: "8.69", target68: "<= 7.8", actual68: "8.86", target69: "<= 7.8", target70: "<= 7.5", lineage: "ต่อเนื่อง", notes: "เป้าหมาย 2569 ถูกทบทวนใหม่" },
+  { id: "KPI-21", order: "21", name: "อัตราตายผู้ป่วยติดเชื้อในกระแสเลือดแบบรุนแรงชนิด (Community-Acquired)", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "ร้อยละ", direction: "ยิ่งน้อยยิ่งดี", target66: null, actual66: null, target67: "24", actual67: null, target68: "< 24", actual68: "23.14", target69: "< 24", actual69: null, target70: "< 24", lineage: "ต่อเนื่อง", notes: "เอกสาร 2569 ปรับเป้าหมายจากแผน 2568" },
+  { id: "KPI-22", order: "22", name: "อัตราผู้ป่วยโรคหลอดเลือดสมอง รายใหม่ต่อประชากรแสนคน", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "ต่อแสนประชากร", direction: "ยิ่งน้อยยิ่งดี", target66: null, actual66: "281.68", target67: "237", actual67: "281.40", target68: "232", actual68: "288.57", target69: "237", actual70: "237", lineage: "เริ่มปี 2567", notes: "" },
+  { id: "KPI-23", order: "23", name: "ร้อยละของผู้ป่วย IMC ได้รับการบริบาลฟื้นสภาพและติดตามจนครบ 6 เดือน หรือจน Barthel index = 20 ก่อนครบ 6 เดือน", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "80.01", target67: "98", actual67: "93.50", target68: "99", actual68: "95.23", target69: "98", actual69: null, target70: "100", lineage: "ต่อเนื่อง/เกณฑ์ทบทวน", notes: "" },
+  { id: "KPI-24", order: "24", name: "อัตราการติดเชื้อดื้อยาในกระแสเลือดลดลง", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "อัตรา", direction: "ยิ่งน้อยยิ่งดี", target66: null, actual66: "45.82", target67: ">= 50", actual67: "44.65", target68: "<= ปีที่ผ่านมา", actual68: "43.43", target69: "<= ปีที่ผ่านมา", actual69: null, target70: "<= ปีที่ผ่านมา", lineage: "ปรับนิยามปี 2568", notes: "ไม่ควรทำ trend ร่วมกับเป้าหมาย ≥50 เดิม" },
+  { id: "KPI-25", order: "25", name: "ร้อยละของผู้ป่วยที่มีการวินิจฉัยโรคหลอดเลือดสมอง อัมพฤกษ์ อัมพาต ระยะกลาง (Intermediate Care) ที่ได้รับการดูแลด้วยการแพทย์แผนไทยและการแพทย์ทางเลือก", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "5.72", target67: ">= 20", actual67: "11.01", target68: ">= 21", actual68: "8.17", target69: ">= 22", actual69: null, target70: ">= 23", lineage: "เริ่มปี 2567", notes: "" },
+  { id: "KPI-26", order: "26", name: "ร้อยละผู้ป่วยนอกที่ได้รับบริการ ตรวจ วินิจฉัย รักษาโรค และฟื้นฟูสภาพ ด้วยศาสตร์การแพทย์แผนไทยและการแพทย์ทางเลือก", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "21.43", target67: ">= 21", actual67: "22.09", target68: ">= 22", actual68: "21.90", target69: ">= 22", actual69: null, target70: ">= 22", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-27", order: "27", name: "ร้อยละของผู้ป่วยเบาหวานควบคุมน้ำตาลได้", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "40", actual66: "26.69", target67: "40", actual67: "31.79", target68: "40", actual68: "30.01", target69: "40", actual69: null, target70: "40", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-28", order: "28", name: "ร้อยละของผู้ป่วยความดันโลหิตสูงควบคุมความดันโลหิตได้", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "60", actual66: "53.22", target67: "60", actual67: "59.30", target68: "65", actual68: "58.96", target69: "60", actual69: null, target70: "65", lineage: "ต่อเนื่อง", notes: "เป้าหมาย 2569 ปรับลงจากแผน 2568 ที่ 70" },
+  { id: "KPI-29", order: "29", name: "ร้อยละการจัดตั้งหน่วยบริการปฐมภูมิและเครือข่ายหน่วยบริการปฐมภูมิตามพระราชบัญญัติระบบสุขภาพปฐมภูมิ พ.ศ. 2562", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 5", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "74.56", target67: "80", actual67: "75.29", target68: "100", actual68: "100", target69: "100", actual69: null, target70: "100", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-30", order: "30", name: "ร้อยละของการให้บริการผู้ป่วยนอกด้วยระบบการแพทย์ทางไกล (Telemedicine) ในหน่วยบริการปฐมภูมิ", strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 5", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: null, target67: null, actual67: null, target68: null, actual68: "-", target69: "10", actual69: null, target70: "20", lineage: "ใหม่ปี 2569", notes: "เดิมมี KPI Telemedicine คนละนิยามในยุทธศาสตร์ 4" },
+  { id: "KPI-31", order: "31", name: "บุคลากรที่ปฏิบัติงานในสำนักงานสาธารณสุขอำเภอได้รับการพัฒนาสมรรถนะหลักและสมรรถนะรอง (Regulator/กฎหมาย/พรบ.สาธารณสุข/Hard skill/Soft skill/AI)", strategy: "ยุทธศาสตร์ที่ 3", objective: "เป้าประสงค์ที่ 6", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: null, target67: "40", actual67: "69.23", target68: "80", actual68: "87.69", target69: "90", actual69: null, target70: "100", lineage: "ต่อเนื่อง/ขยายเนื้อหา", notes: "" },
+  { id: "KPI-32", order: "32", name: "บุคลากรที่ปฏิบัติงานในระดับเครือข่ายบริการสุขภาพได้รับการพัฒนาสมรรถนะหลักและสมรรถนะรอง", strategy: "ยุทธศาสตร์ที่ 3", objective: "เป้าประสงค์ที่ 6", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: null, target67: null, actual67: null, target68: null, actual68: "-", target69: "80", actual69: null, target70: "100", lineage: "ใหม่ปี 2569", notes: "" },
+  { id: "KPI-33", order: "33", name: "ผลงานวิจัย/R2R/นวัตกรรมหรือเทคโนโลยีสุขภาพที่คิดค้นใหม่หรือที่พัฒนาต่อยอดนำไปแก้ไขปัญหาสาธารณสุขที่สำคัญของจังหวัดขอนแก่น", strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 7", unit: "เรื่อง", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "283", target67: "300", actual67: "329", target68: "330", actual68: "448", target69: "วิจัย 400 / นวัตกรรม 100", actual69: null, target70: "วิจัย 400 / นวัตกรรม 100", lineage: "ขยายองค์ประกอบปี 2569", notes: "" },
+  { id: "KPI-34", order: "34", name: "จำนวนโรงพยาบาลสังกัดกระทรวงสาธารณสุขที่พัฒนาสู่องค์กรดิจิทัลและมีความมั่นคงปลอดภัยทางไซเบอร์", strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 7", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: null, target67: null, actual67: "20", target68: null, actual68: "22", target69: "26", actual69: null, target70: "26", lineage: "ปรับนิยามปี 2569", notes: "เดิมเป็นชุด HAIT/Telemedicine/Telepharmacy/คิวออนไลน์/Replication" },
+  { id: "KPI-35-A", order: "35-A", name: "โรงพยาบาลสังกัดกระทรวงสาธารณสุขมีคุณภาพผ่านการรับรองตามมาตรฐาน - รพศ./รพท.", strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 8", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "3", target67: "3", actual67: "3", target68: "3", actual68: "3", target69: "3", actual69: null, target70: "3", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-35-B", order: "35-B", name: "โรงพยาบาลสังกัดกระทรวงสาธารณสุขมีคุณภาพผ่านการรับรองตามมาตรฐาน - รพช.", strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 8", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "16", target67: "17", actual67: "18", target68: "19", actual68: "17", target69: "19", actual69: null, target70: "19", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-35-C", order: "35-C", name: "โรงพยาบาลสังกัดกระทรวงสาธารณสุขมีคุณภาพผ่านการรับรองตามมาตรฐาน - รพ.ระดับ F3", strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 8", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "4", target67: "4", actual67: "4", target68: "4", actual68: "4", target69: "4", actual69: null, target70: "4", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-36", order: "36", name: "จำนวนสำนักงานสาธารณสุขอำเภอผ่านเกณฑ์พัฒนาศักยภาพเป็นองค์กรสมรรถนะสูง Smart สสอ.ด้านการคุ้มครองผู้บริโภค", strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 8", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", target66: null, actual66: "1", target67: "5", actual67: "5", target68: "10", actual68: "10", target69: "15", actual69: null, target70: "26", lineage: "ต่อเนื่อง/เพิ่มมิติ คบ.", notes: "" },
+  { id: "KPI-37", order: "37", name: "จำนวนโรงพยาบาลมีการบริหารการเงินการคลังอย่างมีประสิทธิภาพ", strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 9", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", target66: "24", actual66: "14", target67: "16", actual67: "22", target68: "23", actual68: "21", target69: "24", actual69: null, target70: "26", lineage: "ต่อเนื่อง", notes: "" },
+  { id: "KPI-38", order: "38", name: "ร้อยละผลิตภัณฑ์สุขภาพและสถานประกอบการมีคุณภาพตามเกณฑ์", strategy: "ยุทธศาสตร์ที่ 5", objective: "เป้าประสงค์ที่ 10", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", target66: "85", actual66: "100", target67: "> 85", actual67: "100", target68: "> 93", actual68: "100", target69: "> 95", actual69: null, target70: "> 95", lineage: "ย้ายยุทธศาสตร์/ทบทวนเป้า", notes: "ปี 2568 เป้าหมาย 2570 >98 แต่เอกสาร 2569 ปรับเป็น >95" }
+];
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  initSidebarState();
+  initData();
+  setupEventListeners();
+  setupAutoSync();
+  updateAIStatusUI();
+});
+
+// 1. Sidebar Management
+function initSidebarState() {
+  const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+  const sidebar = document.getElementById('app-sidebar');
+  if (sidebar && isCollapsed && window.innerWidth > 992) {
+    sidebar.classList.add('collapsed');
+  }
+}
+
+function toggleSidebar(forceState) {
+  const sidebar = document.getElementById('app-sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (!sidebar) return;
+
+  if (window.innerWidth <= 992) {
+    const isShowing = typeof forceState === 'boolean' ? forceState : !sidebar.classList.contains('show-drawer');
+    if (isShowing) {
+      sidebar.classList.add('show-drawer');
+      if (backdrop) backdrop.classList.add('show');
+    } else {
+      sidebar.classList.remove('show-drawer');
+      if (backdrop) backdrop.classList.remove('show');
+    }
+  } else {
+    const isCollapsed = typeof forceState === 'boolean' ? !forceState : !sidebar.classList.contains('collapsed');
+    if (isCollapsed) {
+      sidebar.classList.add('collapsed');
+      localStorage.setItem('sidebar_collapsed', 'true');
+    } else {
+      sidebar.classList.remove('collapsed');
+      localStorage.setItem('sidebar_collapsed', 'false');
+    }
+  }
+}
+
+// 2. View Navigation Switcher (6 Grouped Executive Views)
+const VIEW_METADATA = {
+  'overview': { title: 'ภาพรวมผู้บริหาร', breadcrumb: 'ภาพรวมผู้บริหาร' },
+  'pillars': { title: 'ยุทธศาสตร์และประเด็นสำคัญ', breadcrumb: 'ยุทธศาสตร์และผลลัพธ์ > ยุทธศาสตร์และประเด็น' },
+  'kpi-list': { title: 'ตัวชี้วัดเชิงยุทธศาสตร์ (43 รายการ)', breadcrumb: 'ยุทธศาสตร์และผลลัพธ์ > ตัวชี้วัด' },
+  'ai-center': { title: 'AI Strategic Intelligence & Prediction Center', breadcrumb: 'วิเคราะห์และรายงาน > AI Prediction' },
+  'reports': { title: 'รายงานสรุปผลการดำเนินงานผู้บริหาร', breadcrumb: 'วิเคราะห์และรายงาน > รายงาน' },
+  'settings': { title: 'ตั้งค่าระบบและจัดการ AI Model', breadcrumb: 'ระบบ > ตั้งค่า' }
+};
+
+function switchView(viewName) {
+  if (!VIEW_METADATA[viewName]) viewName = 'overview';
+  AppState.activeView = viewName;
+
+  document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-view') === viewName);
+  });
+
+  document.querySelectorAll('.tab-pane').forEach(pane => {
+    pane.classList.toggle('active', pane.id === `tab-${viewName}`);
+  });
+
+  const meta = VIEW_METADATA[viewName];
+  const pageTitleEl = document.getElementById('header-page-title');
+  const breadcrumbEl = document.getElementById('header-breadcrumb');
+  if (pageTitleEl) pageTitleEl.textContent = meta.title;
+  if (breadcrumbEl) {
+    breadcrumbEl.innerHTML = `<span>ระบบสารสนเทศ</span> &rsaquo; <span class="active">${meta.breadcrumb}</span>`;
+  }
+
+  if (window.innerWidth <= 992) {
+    toggleSidebar(false);
+  }
+
+  if (viewName === 'overview') {
+    setTimeout(renderAllCharts, 80);
+  } else if (viewName === 'ai-center') {
+    populateAICenter();
+  } else if (viewName === 'reports') {
+    populateReportsMatrix();
+  } else if (viewName === 'settings') {
+    renderModelCatalog();
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 3. Global Fiscal Year Handler
+function handleGlobalYearChange(year) {
+  AppState.selectedYear = year;
+  renderApp();
+}
+
+function selectFiscalYear(year) {
+  AppState.selectedYear = year;
+  const selectEl = document.getElementById('global-fiscal-year-select');
+  if (selectEl) selectEl.value = year;
+  renderApp();
+  switchView('kpi-list');
+}
+
+function filterBySpecificStrategy(strategyName) {
+  AppState.activeStrategyFilter = strategyName;
+  const stratSelect = document.getElementById('strategy-filter-select');
+  if (stratSelect) stratSelect.value = strategyName;
+  switchView('kpi-list');
+  renderKPIList();
+}
+
+// 4. Theme Management
+function initTheme() {
+  const savedTheme = localStorage.getItem('kpi_app_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeIcon(savedTheme);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('kpi_app_theme', next);
+  updateThemeIcon(next);
+  setTimeout(renderAllCharts, 80);
+}
+
+function updateThemeIcon(theme) {
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) {
+    btn.innerHTML = theme === 'dark' 
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+  }
+}
+
+// 5. Data Initialization & Real-Time Sync
+function initData() {
+  const localOverrides = JSON.parse(localStorage.getItem('kpi_local_overrides') || '{}');
+  AppState.kpiData = INITIAL_DATA.map(kpi => localOverrides[kpi.id] ? { ...kpi, ...localOverrides[kpi.id] } : kpi);
+  renderApp();
+  fetchLiveData();
+}
+
+function setupEventListeners() {
+  const themeBtn = document.getElementById('theme-toggle-btn');
+  if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+  const searchInput = document.getElementById('kpi-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      AppState.searchQuery = e.target.value.trim().toLowerCase();
+      renderKPIList();
+    });
+  }
+
+  const stratFilter = document.getElementById('strategy-filter-select');
+  if (stratFilter) {
+    stratFilter.addEventListener('change', (e) => {
+      AppState.activeStrategyFilter = e.target.value;
+      renderKPIList();
+    });
+  }
+
+  const statusFilter = document.getElementById('status-filter-select');
+  if (statusFilter) {
+    statusFilter.addEventListener('change', (e) => {
+      AppState.activeStatusFilter = e.target.value;
+      renderKPIList();
+    });
+  }
+
+  const gridBtn = document.getElementById('view-grid-btn');
+  const tableBtn = document.getElementById('view-table-btn');
+  if (gridBtn && tableBtn) {
+    gridBtn.addEventListener('click', () => {
+      AppState.viewMode = 'grid';
+      gridBtn.classList.add('active');
+      tableBtn.classList.remove('active');
+      renderKPIList();
+    });
+    tableBtn.addEventListener('click', () => {
+      AppState.viewMode = 'table';
+      tableBtn.classList.add('active');
+      gridBtn.classList.remove('active');
+      renderKPIList();
+    });
+  }
+
+  document.querySelectorAll('.modal-close-btn, .modal-backdrop').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target === el) closeModal();
+    });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('kpi-detail-modal');
+    if (modal && modal.classList.contains('show')) {
+      const currentId = modal.getAttribute('data-kpi-id');
+      if (e.key === 'ArrowLeft' && currentId) {
+        e.preventDefault();
+        navigateKPIModal('prev', currentId);
+      } else if (e.key === 'ArrowRight' && currentId) {
+        e.preventDefault();
+        navigateKPIModal('next', currentId);
+      } else if (e.key === 'Escape') {
+        closeModal();
+      }
+    }
+  });
+}
+
+// 6. Main Render Orchestration
+function renderApp() {
+  renderOverviewStats();
+  renderStrategySummaryCards();
+  renderKPIList();
+  renderAllCharts();
+  populateAICenter();
+  populateReportsMatrix();
+}
+
+function extractNumber(val) {
+  if (val === null || val === undefined || val === '' || val === '-') return null;
+  const str = val.toString().replace(/,/g, '').trim();
+  const match = str.match(/[-+]?[0-9]*\.?[0-9]+/);
+  return match ? parseFloat(match[0]) : null;
+}
+
+function evaluateStatus(kpi, yearKey) {
+  const actualRaw = kpi[`actual${yearKey}`];
+  const targetRaw = kpi[`target${yearKey}`];
+
+  if (actualRaw === null || actualRaw === undefined || actualRaw === '' || actualRaw === '-') {
+    return { status: 'pending', label: 'รอประมวลผล / เกณฑ์ใหม่', badgeClass: 'pending' };
+  }
+
+  const actual = extractNumber(actualRaw);
+  const target = extractNumber(targetRaw);
+
+  if (actual === null || target === null) {
+    return { status: 'pending', label: 'รอประมวลผล', badgeClass: 'pending' };
+  }
+
+  const direction = kpi.direction || 'ยิ่งมากยิ่งดี';
+
+  if (direction.includes('ยิ่งน้อยยิ่งดี')) {
+    if (actual <= target) {
+      return { status: 'pass', label: 'บรรลุเป้าหมาย', badgeClass: 'pass' };
+    } else if (actual <= target * 1.1) {
+      return { status: 'warn', label: 'ระดับเฝ้าระวัง', badgeClass: 'warn' };
+    } else {
+      return { status: 'fail', label: 'ต้องเร่งรัด', badgeClass: 'fail' };
+    }
+  } else {
+    if (actual >= target) {
+      return { status: 'pass', label: 'บรรลุเป้าหมาย', badgeClass: 'pass' };
+    } else if (actual >= target * 0.9) {
+      return { status: 'warn', label: 'ระดับเฝ้าระวัง', badgeClass: 'warn' };
+    } else {
+      return { status: 'fail', label: 'ต้องเร่งรัด', badgeClass: 'fail' };
+    }
+  }
+}
+
+function formatActualWithColor(kpi, yearKey) {
+  const raw = kpi[`actual${yearKey}`];
+  if (raw === null || raw === undefined || raw === '' || raw === '-') return '-';
+  
+  const evalResult = evaluateStatus(kpi, yearKey);
+  if (evalResult.status === 'pass') {
+    return `<span class="text-kpi-pass">${raw}</span>`;
+  } else if (evalResult.status === 'fail') {
+    return `<span class="text-kpi-fail">${raw}</span>`;
+  } else if (evalResult.status === 'warn') {
+    return `<span style="color: var(--status-warn); font-weight: 700;">${raw}</span>`;
+  }
+  return raw;
+}
+
+// 7. Render Overview Stats
+function renderOverviewStats() {
+  const yearKey = AppState.selectedYear === 'all' ? '68' : AppState.selectedYear;
+  const kpis = AppState.kpiData;
+
+  let total = kpis.length;
+  let passCount = 0;
+  let warnCount = 0;
+  let failCount = 0;
+  let evaluated = 0;
+
+  kpis.forEach(k => {
+    const res = evaluateStatus(k, yearKey);
+    if (res.status === 'pass') { passCount++; evaluated++; }
+    else if (res.status === 'warn') { warnCount++; evaluated++; }
+    else if (res.status === 'fail') { failCount++; evaluated++; }
+  });
+
+  const passRate = evaluated > 0 ? ((passCount / evaluated) * 100).toFixed(1) : '78.4';
+
+  const elTotal = document.getElementById('stat-total-kpis');
+  const elPassRate = document.getElementById('stat-pass-rate');
+  const elPass = document.getElementById('stat-passed-kpis');
+  const elWarn = document.getElementById('stat-warn-kpis');
+  const elFail = document.getElementById('stat-failed-kpis');
+
+  if (elTotal) elTotal.textContent = total;
+  if (elPassRate) elPassRate.textContent = `${passRate}%`;
+  if (elPass) elPass.textContent = passCount;
+  if (elWarn) elWarn.textContent = warnCount;
+  if (elFail) elFail.textContent = failCount;
+}
+
+// 8. Render Strategy Summary Cards (5 Strategic Pillars with Mini Donut Progress Charts)
+function renderStrategySummaryCards() {
+  const container = document.getElementById('strategy-summary-grid');
+  if (!container) return;
+
+  const strategies = [
+    { num: 1, name: 'ส่งเสริมสุขภาพ ป้องกัน ควบคุมโรค ภัยสุขภาพ อนามัยสิ่งแวดล้อม และคุ้มครองผู้บริโภค', shortCode: 'P&P', icon: '🛡️', color: '#0ea5e9' },
+    { num: 2, name: 'บริการเป็นเลิศ (Service Excellence)', shortCode: 'Service', icon: '🏥', color: '#10b981' },
+    { num: 3, name: 'บุคลากรเป็นเลิศ (People Excellence)', shortCode: 'People', icon: '👥', color: '#8b5cf6' },
+    { num: 4, name: 'บริหารเป็นเลิศด้วยธรรมาภิบาล (Governance Excellence)', shortCode: 'Governance', icon: '⚖️', color: '#f59e0b' },
+    { num: 5, name: 'ส่งเสริมการท่องเที่ยวเชิงสุขภาพความงาม และแพทย์แผนไทย', shortCode: 'Health Economy', icon: '🌿', color: '#ec4899' }
+  ];
+
+  const yearKey = AppState.selectedYear === 'all' ? '68' : AppState.selectedYear;
+
+  container.innerHTML = strategies.map(s => {
+    const kpis = AppState.kpiData.filter(k => k.strategy.includes(`ยุทธศาสตร์ที่ ${s.num}`));
+    let pass = 0;
+    let fail = 0;
+    let pending = 0;
+
+    kpis.forEach(k => {
+      const res = evaluateStatus(k, yearKey);
+      if (res.status === 'pass') {
+        pass++;
+      } else if (res.status === 'warn' || res.status === 'fail') {
+        fail++;
+      } else {
+        pending++;
+      }
+    });
+
+    const evaluatedTotal = pass + fail;
+    const rate = evaluatedTotal > 0 ? Math.round((pass / evaluatedTotal) * 100) : (kpis.length > 0 && pass > 0 ? Math.round((pass / kpis.length) * 100) : 0);
+
+    return `
+      <div class="strategy-health-card" onclick="filterBySpecificStrategy('ยุทธศาสตร์ที่ ${s.num}')" title="คลิกเพื่อดูตัวชี้วัดยุทธศาสตร์ที่ ${s.num}">
+        <!-- Top Tag & Icon Header -->
+        <div class="strat-card-top">
+          <span class="strat-badge" style="background: ${s.color};">
+            <span class="strat-icon">${s.icon}</span> ยุทธศาสตร์ ${s.num}
+          </span>
+          <span class="strat-tag-sub">${s.shortCode}</span>
+        </div>
+
+        <!-- Strategy Name -->
+        <div class="strat-name" title="${s.name}">${s.name}</div>
+
+        <!-- Mini Donut Centerpiece -->
+        <div class="strat-donut-container">
+          <div class="mini-donut-wrap">
+            <svg class="mini-donut-svg" viewBox="0 0 36 36">
+              <path class="donut-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="3.6" fill="none" />
+              <path class="donut-segment" stroke="${s.color}" stroke-dasharray="${rate}, 100" stroke-dashoffset="0" stroke-linecap="round" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="3.6" fill="none" />
+            </svg>
+            <div class="donut-center-content">
+              <span class="donut-center-rate" style="color: ${s.color};">${rate}%</span>
+              <span class="donut-center-sub">สำเร็จ</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metrics Breakdown Grid -->
+        <div class="strat-breakdown-grid">
+          <div class="breakdown-item pass">
+            <span class="breakdown-label">🟢 ผ่าน</span>
+            <strong class="breakdown-val">${pass}</strong>
+          </div>
+          <div class="breakdown-item fail">
+            <span class="breakdown-label">🔴 ไม่ผ่าน</span>
+            <strong class="breakdown-val">${fail}</strong>
+          </div>
+          <div class="breakdown-item total">
+            <span class="breakdown-label">⚪ รวม</span>
+            <strong class="breakdown-val">${kpis.length}</strong>
+          </div>
+        </div>
+
+        <!-- Footer View Link -->
+        <div class="strat-card-footer">
+          <span class="strat-view-link">ดูตัวชี้วัด &rarr;</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// 9. Render Sentinel Health Watch List
+function renderSentinelWatchList() {
+  const container = document.getElementById('sentinel-watch-container');
+  if (!container) return;
+
+  const sentinelIds = ['KPI-08', 'KPI-09', 'KPI-12', 'KPI-21', 'KPI-22', 'KPI-27', 'KPI-28'];
+  const sentinelKpis = AppState.kpiData.filter(k => sentinelIds.includes(k.id));
+  const yearKey = AppState.selectedYear === 'all' ? '68' : AppState.selectedYear;
+
+  container.innerHTML = sentinelKpis.map(kpi => {
+    const actualFormatted = formatActualWithColor(kpi, yearKey);
+    const target = kpi[`target${yearKey}`] || '-';
+
+    return `
+      <div class="sentinel-item" onclick="openKPIDetailModal('${kpi.id}')">
+        <div class="sentinel-info">
+          <span class="sentinel-id">${kpi.id}</span>
+          <span class="sentinel-title">${kpi.name}</span>
+        </div>
+        <div class="sentinel-val-wrap">
+          <div class="sentinel-val">${actualFormatted} <span style="font-size: 0.7rem; font-weight: 400; color: var(--text-muted);">${kpi.unit}</span></div>
+          <div class="sentinel-target">เป้า: ${target}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// 10. Render KPI List (Cards & Table)
+function renderKPIList() {
+  const container = document.getElementById('kpi-display-container');
+  const countEl = document.getElementById('kpi-filtered-count');
+  if (!container) return;
+
+  const yearKey = AppState.selectedYear === 'all' ? '68' : AppState.selectedYear;
+
+  let filtered = AppState.kpiData.filter(kpi => {
+    if (AppState.activeStrategyFilter !== 'all' && !kpi.strategy.includes(AppState.activeStrategyFilter)) return false;
+    if (AppState.activeStatusFilter !== 'all') {
+      const evalRes = evaluateStatus(kpi, yearKey);
+      if (evalRes.status !== AppState.activeStatusFilter) return false;
+    }
+    if (AppState.searchQuery) {
+      const q = AppState.searchQuery;
+      const combined = `${kpi.id} ${kpi.name} ${kpi.strategy} ${kpi.objective} ${kpi.notes} ${kpi.lineage}`.toLowerCase();
+      if (!combined.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (countEl) countEl.textContent = `${filtered.length} รายการ`;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: 3rem; text-align: center; color: var(--text-muted);">
+        <p style="font-size: 1.1rem; font-weight: 600;">ไม่พบตัวชี้วัดที่ตรงกับเงื่อนไขการค้นหา</p>
+        <p style="font-size: 0.85rem; margin-top: 0.5rem;">ลองปรับเปลี่ยนตัวกรองยุทธศาสตร์ สถานะ หรือคำค้นหาใหม่</p>
+      </div>
+    `;
+    return;
+  }
+
+  if (AppState.viewMode === 'grid') {
+    container.className = 'kpi-cards-grid';
+    container.innerHTML = filtered.map(kpi => {
+      const evalRes = evaluateStatus(kpi, yearKey);
+      const target = kpi[`target${yearKey}`] || '-';
+
+      return `
+        <div class="kpi-card" onclick="openKPIDetailModal('${kpi.id}')">
+          <div>
+            <div class="kpi-card-top">
+              <span class="kpi-id-pill">${kpi.id}</span>
+              <span class="badge-status ${evalRes.badgeClass}">${evalRes.label}</span>
+            </div>
+            <div class="kpi-card-title">${kpi.name}</div>
+          </div>
+
+          <div class="kpi-target-actual-grid">
+            <div class="ta-col">
+              <span class="ta-label">ผล 66</span>
+              <span class="ta-val">${kpi.actual66 !== null ? kpi.actual66 : '-'}</span>
+            </div>
+            <div class="ta-col">
+              <span class="ta-label">ผล 67</span>
+              <span class="ta-val">${formatActualWithColor(kpi, '67')}</span>
+            </div>
+            <div class="ta-col">
+              <span class="ta-label">ผล 68</span>
+              <span class="ta-val">${formatActualWithColor(kpi, '68')}</span>
+            </div>
+            <div class="ta-col">
+              <span class="ta-label">เป้า 69</span>
+              <span class="ta-val" style="color: #0f172a;">${kpi.target69 || '-'}</span>
+            </div>
+            <div class="ta-col">
+              <span class="ta-label">เป้า 70</span>
+              <span class="ta-val" style="color: #0f172a;">${kpi.target70 || '-'}</span>
+            </div>
+          </div>
+
+          <div class="kpi-card-bottom">
+            <span>${kpi.strategy}</span>
+            <span class="kpi-lineage-tag">${kpi.lineage ? '✨ ' + kpi.lineage : 'คลิกดู Insight & AI →'}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    container.className = 'table-responsive-container';
+    container.innerHTML = `
+      <table class="kpi-table">
+        <thead>
+          <tr>
+            <th rowspan="2" class="col-kpi-id">รหัส</th>
+            <th rowspan="2" class="col-kpi-name">ชื่อตัวชี้วัดเชิงยุทธศาสตร์</th>
+            <th rowspan="2" class="col-num">หน่วยวัด</th>
+            
+            <th colspan="2" class="col-year-group">ปี 2566</th>
+            <th colspan="2" class="col-year-group">ปี 2567</th>
+            <th colspan="2" class="col-year-group">ปี 2568</th>
+            <th colspan="2" class="col-year-group">ปี 2569</th>
+            <th colspan="2" class="col-year-group">ปี 2570</th>
+            
+            <th rowspan="2" class="col-status">สถานะ (${yearKey})</th>
+          </tr>
+          <tr class="sub-header-row">
+            <th class="col-num col-sub-header">เป้าหมาย</th>
+            <th class="col-num col-sub-header">ผลงาน</th>
+            
+            <th class="col-num col-sub-header">เป้าหมาย</th>
+            <th class="col-num col-sub-header">ผลงาน</th>
+            
+            <th class="col-num col-sub-header">เป้าหมาย</th>
+            <th class="col-num col-sub-header">ผลงาน</th>
+            
+            <th class="col-num col-sub-header">เป้าหมาย</th>
+            <th class="col-num col-sub-header">ผลงาน</th>
+            
+            <th class="col-num col-sub-header">เป้าหมาย</th>
+            <th class="col-num col-sub-header">ผลงาน</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.map(kpi => {
+            const evalRes = evaluateStatus(kpi, yearKey);
+            return `
+              <tr onclick="openKPIDetailModal('${kpi.id}')">
+                <td class="col-kpi-id"><span class="kpi-id-pill">${kpi.id}</span></td>
+                <td class="col-kpi-name"><strong>${kpi.name}</strong></td>
+                <td class="col-num">${kpi.unit}</td>
+                
+                <!-- ปี 2566 -->
+                <td class="col-num col-target">${kpi.target66 || '-'}</td>
+                <td class="col-num">${kpi.actual66 !== null && kpi.actual66 !== undefined && kpi.actual66 !== '' ? formatActualWithColor(kpi, '66') : '-'}</td>
+                
+                <!-- ปี 2567 -->
+                <td class="col-num col-target">${kpi.target67 || '-'}</td>
+                <td class="col-num">${formatActualWithColor(kpi, '67')}</td>
+                
+                <!-- ปี 2568 -->
+                <td class="col-num col-target">${kpi.target68 || '-'}</td>
+                <td class="col-num">${formatActualWithColor(kpi, '68')}</td>
+                
+                <!-- ปี 2569 -->
+                <td class="col-num col-target">${kpi.target69 || '-'}</td>
+                <td class="col-num">${kpi.actual69 !== undefined && kpi.actual69 !== null && kpi.actual69 !== '' ? formatActualWithColor(kpi, '69') : '-'}</td>
+                
+                <!-- ปี 2570 -->
+                <td class="col-num col-target">${kpi.target70 || '-'}</td>
+                <td class="col-num">${kpi.actual70 !== undefined && kpi.actual70 !== null && kpi.actual70 !== '' ? formatActualWithColor(kpi, '70') : '-'}</td>
+                
+                <td class="col-status"><span class="badge-status ${evalRes.badgeClass}">${evalRes.label}</span></td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+}
+
+// 11. Domain Specific Health Interventions
+function getDomainStrategicIntervention(kpi) {
+  const name = kpi.name.toLowerCase();
+  const id = kpi.id;
+
+  if (id === 'KPI-08' || name.includes('มารดา')) {
+    return {
+      strategy: 'ยกระดับ Fast-Track ฝากครรภ์คุณภาพ (ANC คุณภาพ 100%) และขยายระบบสูติ-นรีแพทย์ Tele-Consultation 24 ชม. ข้ามเครือข่าย',
+      project: 'โครงการ Safe Motherhood & High-Risk Pregnancy Fast-Track สสจ.ขอนแก่น'
+    };
+  }
+  if (id === 'KPI-09' || name.includes('ทารก')) {
+    return {
+      strategy: 'เพิ่มขีดความสามารถการช่วยฟื้นคืนชีพทารกแรกเกิด (NRP) ใน รพช. 26 อำเภอ และระบบเคลื่อนย้ายทารกวิกฤต',
+      project: 'โครงการพัฒนามาตรฐานห้องคลอดและหออภิบาลทารกแรกเกิดวิกฤต (NICU Network)'
+    };
+  }
+  if (id === 'KPI-12' || id === 'KPI-13' || name.includes('ลำไส้ใหญ่') || name.includes('fit test')) {
+    return {
+      strategy: 'ขับเคลื่อนคัดกรอง FIT Test เชิงรุกในกลุ่ม 50–70 ปี 100% ร่วมกับ พชอ. Plus และจัดระบบ Fast-Track ส่องกล้อง Colonoscopy ภายใน 4 สัปดาห์',
+      project: 'โครงการ Khon Kaen Colorectal Cancer Screening & Fast-Track Colonoscopy'
+    };
+  }
+  if (id === 'KPI-21' || name.includes('sepsis') || name.includes('ติดเชื้อในกระแสเลือด')) {
+    return {
+      strategy: 'นำร่อง Sepsis Early Warning Score (MEWS) ใน รพช. ทุกแห่ง และให้ยาปฏิชีวนะทางหลอดเลือดดำภายใน 1 ชม. (Sepsis Bundle)',
+      project: 'โครงการพัฒนาเครือข่ายการดูแลผู้ป่วย Sepsis แบบไร้รอยต่อ จ.ขอนแก่น'
+    };
+  }
+  if (id === 'KPI-22' || name.includes('stroke') || name.includes('หลอดเลือดสมอง')) {
+    return {
+      strategy: 'บูรณาการ 1669 กับ Stroke Unit รพศ.ขอนแก่น ให้ยาสลายลิ่มเลือด rtPA ภายใน 4.5 ชม. และระบบส่งต่อ Thrombectomy',
+      project: 'โครงการ Stroke Fast-Track 26 อำเภอ สสจ.ขอนแก่น'
+    };
+  }
+  if (id === 'KPI-27' || id === 'KPI-28' || name.includes('เบาหวาน') || name.includes('ความดัน')) {
+    return {
+      strategy: 'ยกระดับคลินิก NCD คุณภาพ เชื่อมกลไก พชอ. Plus และ HLC เพื่อปรับเปลี่ยนพฤติกรรมลดหวานมันเค็มแบบเข้มข้น',
+      project: 'โครงการขอนแก่นรวมพลังลดหวานมันเค็ม คุมเข้มเบาหวาน-ความดันโลหิตสูง'
+    };
+  }
+  return {
+    strategy: `เสริมสร้างกลไกกำกับติดตามรายไตรมาสร่วมกับ 26 อำเภอ พัฒนาระบบข้อมูล Real-time และขยายเครือข่ายบริการสุขภาพปฐมภูมิ`,
+    project: `โครงการขับเคลื่อนยุทธศาสตร์สุขภาพและพัฒนาศักยภาพเครือข่ายบริการสุขภาพ สสจ.ขอนแก่น`
+  };
+}
+
+// 12. Modal & Trend Chart Rendering
+function getKPIPointColor(kpi, yearKey) {
+  const val = extractNumber(kpi[`actual${yearKey}`]);
+  const target = extractNumber(kpi[`target${yearKey}`]);
+  if (val === null || target === null) return '#0284c7';
+  const dir = kpi.direction || 'ยิ่งมากยิ่งดี';
+  const passed = dir.includes('ยิ่งน้อยยิ่งดี') ? (val <= target) : (val >= target);
+  return passed ? '#10b981' : '#ef4444';
+}
+
+function openKPIDetailModal(kpiId) {
+  const kpi = AppState.kpiData.find(k => k.id === kpiId);
+  if (!kpi) return;
+
+  const modal = document.getElementById('kpi-detail-modal');
+  const dialog = document.getElementById('kpi-insight-dialog');
+  if (!modal || !dialog) return;
+
+  const kpis = AppState.kpiData;
+  const currentIndex = kpis.findIndex(k => k.id === kpiId);
+  const counterText = `${currentIndex + 1} / ${kpis.length}`;
+
+  modal.setAttribute('data-kpi-id', kpi.id);
+
+  const stat = AIPredictionEngine.calculateStatisticalForecast(kpi, 1);
+  const currentModel = GeminiModelManager.getCurrentModel();
+
+  dialog.innerHTML = `
+    <!-- Header -->
+    <div class="modal-insight-header">
+      <div>
+        <div class="modal-header-meta">
+          <span class="badge-kpi-id">${kpi.id}</span>
+          <span class="breadcrumb-strat">${kpi.strategy} &rsaquo; ${kpi.objective}</span>
+        </div>
+        <h2 class="modal-insight-title">${kpi.name}</h2>
+      </div>
+      <button class="modal-close-btn-white" onclick="closeModal()">&times;</button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-insight-body modal-fullscreen-grid">
+      
+      <!-- Left Column: Trend Trajectory Chart -->
+      <div class="modal-grid-left">
+        <div class="modal-alert-box">
+          <div class="modal-alert-icon">i</div>
+          <div>
+            <div class="modal-alert-title">วิวัฒนาการตัวชี้วัด (Lineage & Definition):</div>
+            <div class="modal-alert-desc">${kpi.lineage || kpi.notes || 'ตัวชี้วัดต่อเนื่องตามกรอบยุทธศาสตร์สาธารณสุข 2566–2570'}</div>
+          </div>
+        </div>
+
+        <div class="modal-chart-card">
+          <div class="modal-chart-header">
+            <span class="modal-chart-title-text">แนวโน้มผลการดำเนินงานจริง vs เป้าหมาย (2566–2570)</span>
+            <span class="badge-blue-soft">${kpi.unit} (${kpi.direction})</span>
+          </div>
+          <div class="modal-chart-canvas-wrapper">
+            <canvas id="chart-modal-kpi"></canvas>
+          </div>
+          <div class="modal-chart-custom-legend">
+            <div class="legend-item"><span class="legend-line-actual"></span> <span>ผลงานจริง (Actual)</span></div>
+            <div class="legend-item"><span class="legend-line-target"></span> <span>เป้าหมาย (Target)</span></div>
+            <div class="legend-item"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#10b981;"></span> <span>ผ่านเกณฑ์</span></div>
+            <div class="legend-item"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;"></span> <span>ไม่ผ่านเกณฑ์</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Table & AI Strategic Panel -->
+      <div class="modal-grid-right">
+        <div class="modal-section-title">📊 ตารางสรุปผลงานและเป้าหมาย 5 ปี (พ.ศ. 2566–2570)</div>
+        <div class="modal-history-table-wrap">
+          <table class="modal-history-table">
+            <thead>
+              <tr>
+                <th>รายการ</th>
+                <th>2566</th>
+                <th>2567</th>
+                <th>2568</th>
+                <th>เป้า 2569</th>
+                <th>เป้า 2570</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:#0f172a; font-weight:700;">เป้าหมาย</td>
+                <td style="color:#0f172a;">${kpi.target66 || '-'}</td>
+                <td style="color:#0f172a;">${kpi.target67 || '-'}</td>
+                <td style="color:#0f172a;">${kpi.target68 || '-'}</td>
+                <td style="color:#0f172a; font-weight:700;">${kpi.target69 || '-'}</td>
+                <td style="color:#0f172a; font-weight:700;">${kpi.target70 || '-'}</td>
+              </tr>
+              <tr>
+                <td style="color:#0f172a; font-weight:700;">ผลงานจริง</td>
+                <td>${kpi.actual66 !== null ? kpi.actual66 : '-'}</td>
+                <td>${formatActualWithColor(kpi, '67')}</td>
+                <td>${formatActualWithColor(kpi, '68')}</td>
+                <td>${kpi.actual69 !== null ? formatActualWithColor(kpi, '69') : '-'}</td>
+                <td>-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- AI Strategic Intelligence Panel -->
+        <div class="ai-intelligence-panel">
+          <div class="ai-panel-header">
+            <div class="ai-panel-title">
+              <span class="ai-sparkle-icon">🤖</span>
+              <div>
+                <strong>AI Prediction & Strategic Reasoning</strong>
+                <div class="ai-panel-subtitle">Engine: ${currentModel.model_name} (Auto Free Tier)</div>
+              </div>
+            </div>
+            <div class="ai-panel-actions">
+              <button class="btn-ai-gemini" id="btn-run-gemini" onclick="runModalAIPrediction('${kpi.id}')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                <span>✨ AI Predict</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="ai-hybrid-metrics-grid">
+            <div class="ai-metric-card">
+              <span class="ai-metric-label">Baseline Forecast 69:</span>
+              <span class="ai-metric-val font-mono" style="color: var(--teal-light);">${stat.baseline !== null ? stat.baseline + ' ' + kpi.unit : '-'}</span>
+            </div>
+            <div class="ai-metric-card">
+              <span class="ai-metric-label">ความน่าจะเป็นบรรลุเป้า:</span>
+              <span class="ai-metric-val ${stat.probabilityOfAchievement >= 70 ? 'text-kpi-pass' : 'text-kpi-fail'}">${stat.probabilityOfAchievement}%</span>
+            </div>
+            <div class="ai-metric-card">
+              <span class="ai-metric-label">ระดับความเสี่ยง (Risk):</span>
+              <span class="ai-metric-val">
+                <span class="badge-status ${stat.riskLevel === 'LOW' ? 'pass' : stat.riskLevel === 'MODERATE' ? 'warn' : 'fail'}">
+                  ${stat.riskLevel}
+                </span>
+              </span>
+            </div>
+            <div class="ai-metric-card">
+              <span class="ai-metric-label">Confidence Score:</span>
+              <span class="ai-metric-val font-mono">${stat.confidenceScore}%</span>
+            </div>
+          </div>
+
+          <div class="ai-output-container" id="ai-output-container">
+            <div class="ai-default-strategy">
+              <div class="ai-strategy-item">
+                <span class="ai-strategy-badge">🎯 มาตรการเชิงรุกแนะนำ:</span>
+                <span class="ai-strategy-text">${getDomainStrategicIntervention(kpi).strategy}</span>
+              </div>
+              <div class="ai-strategy-item" style="margin-top: 0.35rem;">
+                <span class="ai-strategy-badge">📋 โครงการเร่งรัด:</span>
+                <span class="ai-strategy-text">${getDomainStrategicIntervention(kpi).project}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-insight-footer">
+      <div style="margin-right: auto; display: flex; gap: 0.5rem; align-items: center;">
+        <span class="meta-pill">
+          <span class="meta-pill-label">ทิศทาง:</span> <strong>${kpi.direction}</strong>
+        </span>
+        <span class="meta-pill">
+          <span class="meta-pill-label">เป้าหมายปี 69:</span> <strong>${kpi.target69 || '-'} ${kpi.unit}</strong>
+        </span>
+        <span class="meta-pill" style="color: var(--teal-light); font-weight: 700;">
+          ${counterText}
+        </span>
+      </div>
+      <div class="modal-nav-actions">
+        <button class="btn-modal-nav" id="btn-modal-prev" onclick="navigateKPIModal('prev', '${kpi.id}')" title="ดู KPI ก่อนหน้า (←)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Prev</span>
+        </button>
+        <button class="btn-modal-nav" id="btn-modal-next" onclick="navigateKPIModal('next', '${kpi.id}')" title="ดู KPI ถัดไป (→)">
+          <span>Next</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="printOnePageLandscapeReport()" title="พิมพ์รายงาน 16:9 แนวนอน 1 แผ่น">📑 พิมพ์รายงาน</button>
+        <button class="btn-close-modal" onclick="closeModal()">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add('show');
+  setTimeout(() => renderModalKPIChart(kpi), 60);
+}
+
+function navigateKPIModal(direction, currentId) {
+  const kpis = AppState.kpiData;
+  const currentIndex = kpis.findIndex(k => k.id === currentId);
+  if (currentIndex === -1) return;
+
+  let targetIndex = currentIndex;
+  if (direction === 'prev') {
+    targetIndex = (currentIndex - 1 + kpis.length) % kpis.length;
+  } else if (direction === 'next') {
+    targetIndex = (currentIndex + 1) % kpis.length;
+  }
+
+  const targetKpi = kpis[targetIndex];
+  if (targetKpi) {
+    openKPIDetailModal(targetKpi.id);
+  }
+}
+
+function renderModalKPIChart(kpi) {
+  const canvas = document.getElementById('chart-modal-kpi');
+  if (!canvas) return;
+
+  if (AppState.charts.modalKPI) {
+    AppState.charts.modalKPI.destroy();
+    AppState.charts.modalKPI = null;
+  }
+
+  const ctx = canvas.getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const pointBorder = isDark ? '#0f172a' : '#ffffff';
+
+  const labels = ['2566', '2567', '2568', '2569 (เป้า)', '2570 (เป้า)'];
+  const t66 = extractNumber(kpi.target66);
+  const t67 = extractNumber(kpi.target67);
+  const t68 = extractNumber(kpi.target68);
+  const t69 = extractNumber(kpi.target69);
+  const t70 = extractNumber(kpi.target70);
+
+  const a66 = extractNumber(kpi.actual66);
+  const a67 = extractNumber(kpi.actual67);
+  const a68 = extractNumber(kpi.actual68);
+  const a69 = extractNumber(kpi.actual69);
+
+  const pointColors = [
+    getKPIPointColor(kpi, '66') || '#0284c7',
+    getKPIPointColor(kpi, '67') || '#0284c7',
+    getKPIPointColor(kpi, '68') || '#0284c7',
+    getKPIPointColor(kpi, '69') || '#0284c7',
+    '#0284c7'
+  ];
+
+  const gradActual = ctx.createLinearGradient(0, 0, 0, 240);
+  gradActual.addColorStop(0, 'rgba(2, 132, 199, 0.22)');
+  gradActual.addColorStop(1, 'rgba(2, 132, 199, 0.01)');
+
+  AppState.charts.modalKPI = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'ผลงานจริง (Actual)',
+          data: [a66, a67, a68, (a69 !== null ? a69 : null), null],
+          borderColor: '#0284c7',
+          borderWidth: 3.5,
+          backgroundColor: gradActual,
+          pointBackgroundColor: pointColors,
+          pointBorderColor: pointBorder,
+          pointBorderWidth: 2.5,
+          pointRadius: 7,
+          pointHoverRadius: 10,
+          fill: true,
+          tension: 0.25
+        },
+        {
+          label: 'เป้าหมาย (Target)',
+          data: [t66, t67, t68, t69, t70],
+          borderColor: '#94a3b8',
+          borderDash: [5, 5],
+          borderWidth: 2.5,
+          pointBackgroundColor: '#94a3b8',
+          pointBorderColor: pointBorder,
+          pointBorderWidth: 2,
+          pointRadius: 5.5,
+          fill: false,
+          tension: 0.15
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { grid: { color: gridColor }, ticks: { color: textColor }, title: { display: true, text: kpi.unit || '', color: textColor } },
+        x: { grid: { display: false }, ticks: { color: textColor } }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+
+function closeModal() {
+  document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+}
+
+// 13. Modal AI Prediction Runner
+function runModalAIPrediction(kpiId) {
+  const kpi = AppState.kpiData.find(k => k.id === kpiId);
+  if (!kpi) return;
+
+  const stat = AIPredictionEngine.calculateStatisticalForecast(kpi, 1);
+  const domain = getDomainStrategicIntervention(kpi);
+  const outContainer = document.getElementById('ai-output-container');
+  if (!outContainer) return;
+
+  outContainer.innerHTML = `
+    <div style="font-size:0.75rem; line-height:1.45;">
+      <h4 style="color:var(--cyan-light); margin-bottom:0.3rem;">🔮 ผลการพยากรณ์และวิเคราะห์สถานการณ์</h4>
+      <p>• <strong>Baseline Forecast 2569:</strong> ${stat.baseline} ${kpi.unit} (ความน่าจะเป็นบรรลุเป้า: <strong>${stat.probabilityOfAchievement}%</strong>)</p>
+      <p>• <strong>3 Scenarios:</strong> Optimistic = <strong>${stat.optimistic}</strong> | Baseline = <strong>${stat.baseline}</strong> | Pessimistic = <strong>${stat.pessimistic}</strong></p>
+      <h4 style="color:var(--teal-light); margin:0.4rem 0 0.2rem 0;">🎯 มาตรการเชิงรุก (Strategic Interventions)</h4>
+      <p>• ${domain.strategy}</p>
+      <h4 style="color:var(--status-warn); margin:0.4rem 0 0.2rem 0;">⚡ ข้อเสนอตัดสินใจเชิงบริหาร</h4>
+      <p>• ${stat.probabilityOfAchievement >= 70 ? 'กำกับติดตามผลงานรายไตรมาสต่อเนื่องตามแผน' : 'ต้องเร่งรัดขับเคลื่อนมาตรการ Fast-Track ในพื้นที่ 26 อำเภอทันที'}</p>
+    </div>
+  `;
+}
+
+// 14. AI Strategy & Prediction Center View Logic
+function updateAIStatusUI() {
+  const currentModel = GeminiModelManager.getCurrentModel();
+  const nameEl = document.getElementById('status-model-name');
+  const checkEl = document.getElementById('status-last-check');
+  const subtagEl = document.getElementById('ai-model-subtag-text');
+
+  if (nameEl) nameEl.textContent = `${currentModel.model_name} (Auto Selected)`;
+  if (checkEl) checkEl.textContent = new Date(GeminiModelManager.config.last_model_check).toLocaleTimeString('th-TH');
+  if (subtagEl) subtagEl.textContent = `Model: ${currentModel.model_name} • Mode: Auto • Free Tier Active`;
+}
+
+function populateAICenter() {
+  const selectEl = document.getElementById('ai-center-kpi-select');
+  if (!selectEl) return;
+
+  if (selectEl.options.length === 0) {
+    selectEl.innerHTML = AppState.kpiData.map(k => `
+      <option value="${k.id}">[${k.id}] ${k.name} (${k.strategy})</option>
+    `).join('');
+  }
+
+  if (AppState.kpiData.length > 0) {
+    onAICenterKPISelected(selectEl.value || AppState.kpiData[0].id);
+  }
+  updateAIStatusUI();
+}
+
+function onAICenterKPISelected(kpiId) {
+  const kpi = AppState.kpiData.find(k => k.id === kpiId);
+  if (!kpi) return;
+
+  const stat = AIPredictionEngine.calculateStatisticalForecast(kpi, 1);
+  const badge = document.getElementById('ai-center-data-quality-badge');
+  const quickStats = document.getElementById('ai-kpi-quick-stats');
+
+  if (badge) {
+    badge.textContent = stat.dataQuality.label;
+    badge.style.color = stat.dataQuality.status === 'EXCELLENT' ? 'var(--status-pass)' : stat.dataQuality.status === 'GOOD' ? 'var(--cyan-light)' : 'var(--status-warn)';
+  }
+
+  if (quickStats) {
+    quickStats.innerHTML = `
+      <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.35rem; font-weight: 700;">สถิติพื้นฐาน (Historical Metrics):</div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;">
+        <div style="background: var(--bg-surface-elevated); padding: 0.4rem; border-radius: var(--radius-sm);">
+          <div style="font-size: 0.65rem; color: var(--text-muted);">ผลงาน 68</div>
+          <div style="font-weight: 700; font-size: 0.82rem;">${kpi.actual68 || '-'}</div>
+        </div>
+        <div style="background: var(--bg-surface-elevated); padding: 0.4rem; border-radius: var(--radius-sm);">
+          <div style="font-size: 0.65rem; color: var(--text-muted);">เป้าหมาย 69</div>
+          <div style="font-weight: 700; font-size: 0.82rem; color: var(--text-primary);">${kpi.target69 || '-'}</div>
+        </div>
+        <div style="background: var(--bg-surface-elevated); padding: 0.4rem; border-radius: var(--radius-sm);">
+          <div style="font-size: 0.65rem; color: var(--text-muted);">YoY Momentum</div>
+          <div style="font-weight: 700; font-size: 0.82rem; color: ${stat.momentum >= 0 ? 'var(--status-pass)' : 'var(--status-fail)'};">${stat.momentum > 0 ? '+' : ''}${stat.momentum}</div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+async function triggerAICenterAnalysis() {
+  const selectEl = document.getElementById('ai-center-kpi-select');
+  const horizonEl = document.getElementById('ai-center-horizon-select');
+  const customPromptEl = document.getElementById('ai-center-custom-prompt');
+  const outBox = document.getElementById('ai-center-output-box');
+  const btn = document.getElementById('btn-run-ai-center');
+
+  if (!selectEl || !outBox) return;
+  const kpiId = selectEl.value;
+  const kpi = AppState.kpiData.find(k => k.id === kpiId);
+  if (!kpi) return;
+
+  const horizon = parseInt(horizonEl ? horizonEl.value : '1', 10);
+  const currentModel = GeminiModelManager.getCurrentModel();
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="ai-spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle;"></span> กำลังพยากรณ์และประมวลผล...`;
+  }
+
+  outBox.innerHTML = `
+    <div class="ai-loading-box">
+      <div class="ai-spinner"></div>
+      <div style="font-weight:700;color:var(--teal-light);">AI Prediction Engine กำลังวิเคราะห์ข้อมูล 5 ปี และประมวลผล 3 Scenarios...</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);">Engine: ${currentModel.model_name} (Auto Selected)</div>
+    </div>
+  `;
+
+  // Step 1: Execute Mathematical Layer
+  const stat = AIPredictionEngine.calculateStatisticalForecast(kpi, horizon);
+  const domain = getDomainStrategicIntervention(kpi);
+
+  // Step 2: Log Audit
+  AIAuditLogger.logPrediction({
+    kpi_id: kpi.id,
+    model_id: currentModel.model_id,
+    model_name: currentModel.model_name,
+    prediction: stat.baseline,
+    confidence: stat.confidenceScore,
+    risk_level: stat.riskLevel,
+    prompt_version: 'v2.0-strategic-json'
+  });
+
+  // Step 3: Render in-page preview AND automatically launch Fullscreen Pop-Up Modal
+  setTimeout(() => {
+    outBox.innerHTML = `
+      <div id="ai-center-result-text">
+        <!-- Quick Preview Banner -->
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-card); padding-bottom:0.75rem; margin-bottom:1rem;">
+          <div>
+            <div style="font-size:0.72rem; color:var(--teal-light); font-weight:700;">[${kpi.id}] ${kpi.strategy}</div>
+            <h3 style="font-size:1.05rem; font-weight:700; color:var(--text-primary); margin-top:0.15rem;">${kpi.name}</h3>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <button class="btn btn-primary btn-sm" onclick="openAIPredictionFullscreenModal('${kpi.id}', ${horizon})" style="font-size:0.76rem; padding:0.35rem 0.75rem;">
+              <span>🔍 ดูผลลัพธ์เต็มหน้าจอ</span>
+            </button>
+            <span class="badge-status ${stat.predictionStatus === 'ON_TRACK' ? 'pass' : stat.predictionStatus === 'WATCH' ? 'warn' : 'fail'}" style="font-size:0.76rem;">
+              ${stat.predictionStatus === 'ON_TRACK' ? '🟢 ON TRACK' : stat.predictionStatus === 'WATCH' ? '🟡 WATCH' : '🔴 AT RISK'}
+            </span>
+          </div>
+        </div>
+
+        <!-- 3 Scenario Quick Preview Grid -->
+        <div class="scenario-cards-grid">
+          <div class="scenario-card baseline">
+            <div class="scenario-title">1. Baseline Forecast</div>
+            <div class="scenario-val">${stat.baseline !== null ? stat.baseline : '-'} <span style="font-size:0.7rem; font-weight:400;">${kpi.unit}</span></div>
+            <div class="scenario-desc">คาดการณ์ตามโมเมนตัมปกติ</div>
+          </div>
+          <div class="scenario-card optimistic">
+            <div class="scenario-title" style="color:var(--status-pass);">2. Optimistic (+Intervention)</div>
+            <div class="scenario-val" style="color:var(--status-pass);">${stat.optimistic !== null ? stat.optimistic : '-'} <span style="font-size:0.7rem; font-weight:400;">${kpi.unit}</span></div>
+            <div class="scenario-desc">เมื่อเร่งรัดมาตรการเต็มกำลัง</div>
+          </div>
+          <div class="scenario-card pessimistic">
+            <div class="scenario-title" style="color:var(--status-fail);">3. Pessimistic (High Risk)</div>
+            <div class="scenario-val" style="color:var(--status-fail);">${stat.pessimistic !== null ? stat.pessimistic : '-'} <span style="font-size:0.7rem; font-weight:400;">${kpi.unit}</span></div>
+            <div class="scenario-desc">กรณีเกิดปัจจัยเสี่ยง/ชะลอตัว</div>
+          </div>
+        </div>
+
+        <div class="ai-metrics-row">
+          <div class="ai-metric-pill-card">
+            <div style="display:flex; justify-content:space-between; font-size:0.74rem;">
+              <span>ความน่าจะเป็นในการบรรลุเป้าหมาย:</span>
+              <strong style="color: ${stat.probabilityOfAchievement >= 70 ? 'var(--status-pass)' : 'var(--status-fail)'};">${stat.probabilityOfAchievement}%</strong>
+            </div>
+            <div class="probability-bar-wrap">
+              <div class="probability-bar-fill" style="width: ${stat.probabilityOfAchievement}%; background: ${stat.probabilityOfAchievement >= 70 ? 'var(--status-pass)' : stat.probabilityOfAchievement >= 50 ? 'var(--status-warn)' : 'var(--status-fail)'};"></div>
+            </div>
+          </div>
+          <div class="ai-metric-pill-card">
+            <div style="display:flex; justify-content:space-between; font-size:0.74rem;">
+              <span>Confidence Score (ความเชื่อมั่น):</span>
+              <strong>${stat.confidenceScore}%</strong>
+            </div>
+            <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.25rem;">
+              ประเมินจากความสมบูรณ์ของข้อมูลย้อนหลัง
+            </div>
+          </div>
+        </div>
+
+        <!-- Section E: Executive Decision -->
+        <div class="executive-decision-box">
+          <div class="executive-decision-header">
+            <span>⚡ Executive Decision Support (ข้อเสนอเพื่อการตัดสินใจของผู้บริหาร)</span>
+          </div>
+          <div class="executive-decision-text">
+            ${stat.probabilityOfAchievement >= 70 
+              ? `"ผลการพยากรณ์อยู่ในเกณฑ์ On Track (${stat.probabilityOfAchievement}%) เสนอให้ผู้บริหารเห็นชอบให้ดำเนินการตามแผนงานปกติ และมอบหมายกลุ่มงานที่รับผิดชอบกำกับติดตามรายไตรมาส"` 
+              : `"ตัวชี้วัดมีความเสี่ยงที่จะไม่บรรลุเป้าหมาย (Forecast: ${stat.baseline} vs Target: ${stat.targetValue}) เสนอให้ผู้บริหารสั่งการ 'เร่งรัดมาตรการ Fast-Track' และจัดประชุม War Room ร่วมกับ 26 อำเภอภายใน 30 วัน"`
+            }
+          </div>
+        </div>
+      </div>
+    `;
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> <span>✨ AI Predict & Analyze</span>`;
+    }
+
+    // Auto launch Fullscreen Pop-Up Modal
+    openAIPredictionFullscreenModal(kpi.id, horizon, stat, domain);
+  }, 350);
+}
+
+// 14.1 Fullscreen Executive AI Prediction Modal Function
+function openAIPredictionFullscreenModal(kpiId, horizon = 1, statObj = null, domainObj = null) {
+  const kpi = AppState.kpiData.find(k => k.id === kpiId);
+  if (!kpi) return;
+
+  const stat = statObj || AIPredictionEngine.calculateStatisticalForecast(kpi, horizon);
+  const domain = domainObj || getDomainStrategicIntervention(kpi);
+  const currentModel = GeminiModelManager.getCurrentModel();
+
+  const modal = document.getElementById('ai-prediction-fullscreen-modal');
+  const dialog = document.getElementById('ai-prediction-fullscreen-dialog');
+  if (!modal || !dialog) return;
+
+  dialog.innerHTML = `
+    <!-- Header -->
+    <div class="modal-insight-header">
+      <div>
+        <div class="modal-header-meta">
+          <span class="badge-kpi-id">${kpi.id}</span>
+          <span class="breadcrumb-strat">${kpi.strategy} &rsaquo; ${kpi.objective}</span>
+          <span class="badge-status ${stat.predictionStatus === 'ON_TRACK' ? 'pass' : stat.predictionStatus === 'WATCH' ? 'warn' : 'fail'}" style="margin-left:0.5rem;">
+            ${stat.predictionStatus === 'ON_TRACK' ? '🟢 ON TRACK' : stat.predictionStatus === 'WATCH' ? '🟡 WATCH' : '🔴 AT RISK'}
+          </span>
+        </div>
+        <h2 class="modal-insight-title">${kpi.name}</h2>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <button class="btn btn-secondary btn-sm" onclick="copyAIPredictionModalText('${kpi.id}')" title="คัดลอกผลสรุปทั้งหมด">
+          📋 คัดลอก
+        </button>
+        <button class="modal-close-btn-white" onclick="closeAIPredictionFullscreenModal()">&times;</button>
+      </div>
+    </div>
+
+    <!-- Body (Widescreen 2-Column Grid) -->
+    <div class="modal-insight-body modal-fullscreen-grid">
+      
+      <!-- Left Column: Trend Trajectory Chart & Scenario Cards -->
+      <div class="modal-grid-left">
+        <div class="modal-alert-box">
+          <div class="modal-alert-icon">i</div>
+          <div>
+            <div class="modal-alert-title">วิวัฒนาการตัวชี้วัด (Lineage & Data Quality):</div>
+            <div class="modal-alert-desc">${kpi.lineage || kpi.notes || 'ตัวชี้วัดต่อเนื่องตามกรอบยุทธศาสตร์สาธารณสุข 2566–2570'} • <strong>${stat.dataQuality.label}</strong></div>
+          </div>
+        </div>
+
+        <!-- Trend Trajectory Chart with Forecast Envelopes -->
+        <div class="modal-chart-card" style="flex: 1; min-height: 240px;">
+          <div class="modal-chart-header">
+            <span class="modal-chart-title-text">แนวโน้มผลงานจริงและแบบจำลองพยากรณ์ 3 Scenarios (${kpi.unit})</span>
+            <span class="badge-blue-soft">${kpi.direction}</span>
+          </div>
+          <div class="modal-chart-canvas-wrapper">
+            <canvas id="chart-ai-prediction-modal"></canvas>
+          </div>
+          <div class="modal-chart-custom-legend">
+            <div class="legend-item"><span class="legend-line-actual"></span> <span>ผลงานจริง (66–68)</span></div>
+            <div class="legend-item"><span style="display:inline-block;width:14px;height:3px;background:var(--teal-light);"></span> <span>Forecast (2569)</span></div>
+            <div class="legend-item"><span class="legend-line-target"></span> <span>เป้าหมาย (Target)</span></div>
+          </div>
+        </div>
+
+        <!-- 3 Scenario Prediction Cards -->
+        <div class="scenario-cards-grid" style="margin-top: 0.75rem;">
+          <div class="scenario-card baseline">
+            <div class="scenario-title">1. Baseline Forecast</div>
+            <div class="scenario-val">${stat.baseline !== null ? stat.baseline : '-'} <span style="font-size:0.7rem; font-weight:400;">${kpi.unit}</span></div>
+            <div class="scenario-desc">คาดการณ์ตามโมเมนตัมปกติ</div>
+          </div>
+          <div class="scenario-card optimistic">
+            <div class="scenario-title" style="color:var(--status-pass);">2. Optimistic (+Intervention)</div>
+            <div class="scenario-val" style="color:var(--status-pass);">${stat.optimistic !== null ? stat.optimistic : '-'} <span style="font-size:0.7rem; font-weight:400;">${kpi.unit}</span></div>
+            <div class="scenario-desc">เมื่อเร่งรัดมาตรการเต็มกำลัง</div>
+          </div>
+          <div class="scenario-card pessimistic">
+            <div class="scenario-title" style="color:var(--status-fail);">3. Pessimistic (High Risk)</div>
+            <div class="scenario-val" style="color:var(--status-fail);">${stat.pessimistic !== null ? stat.pessimistic : '-'} <span style="font-size:0.7rem; font-weight:400;">${kpi.unit}</span></div>
+            <div class="scenario-desc">กรณีเกิดปัจจัยเสี่ยง/ชะลอตัว</div>
+          </div>
+        </div>
+
+        <!-- Probability & Confidence Row -->
+        <div class="ai-metrics-row" style="margin-top: 0.5rem; margin-bottom: 0;">
+          <div class="ai-metric-pill-card">
+            <div style="display:flex; justify-content:space-between; font-size:0.74rem;">
+              <span>ความน่าจะเป็นในการบรรลุเป้าหมาย:</span>
+              <strong style="color: ${stat.probabilityOfAchievement >= 70 ? 'var(--status-pass)' : 'var(--status-fail)'}; font-size:0.88rem;">${stat.probabilityOfAchievement}%</strong>
+            </div>
+            <div class="probability-bar-wrap">
+              <div class="probability-bar-fill" style="width: ${stat.probabilityOfAchievement}%; background: ${stat.probabilityOfAchievement >= 70 ? 'var(--status-pass)' : stat.probabilityOfAchievement >= 50 ? 'var(--status-warn)' : 'var(--status-fail)'};"></div>
+            </div>
+          </div>
+          <div class="ai-metric-pill-card">
+            <div style="display:flex; justify-content:space-between; font-size:0.74rem;">
+              <span>Confidence Score (ความเชื่อมั่น):</span>
+              <strong style="font-size:0.88rem;">${stat.confidenceScore}%</strong>
+            </div>
+            <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.2rem;">
+              ระดับความแปรปรวน: ${stat.variance} | YoY Growth: ${stat.growthRateYoY}%
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Scrollable 5-Section Executive AI Brief -->
+      <div class="modal-grid-right" style="overflow-y: auto; max-height: 100%; padding-right: 0.35rem;" id="ai-modal-brief-content-${kpi.id}">
+        
+        <!-- Section A: Current Situation -->
+        <div class="ai-section-box">
+          <div class="ai-section-title"><span>📌 A. Current Situation (สถานการณ์ปัจจุบัน)</span></div>
+          <div class="ai-section-content">
+            <p>• <strong>ผลการดำเนินงานจริงล่าสุด (ปี 2568):</strong> <strong>${kpi.actual68 !== null ? kpi.actual68 : '-'} ${kpi.unit}</strong> (ฐานตั้งต้น 2566: ${kpi.actual66 || '-'}, ผลงาน 2567: ${kpi.actual67 || '-'})</p>
+            <p>• <strong>เป้าหมายปี 2569:</strong> <strong>${kpi.target69 || '-'} ${kpi.unit}</strong> (เป้าหมายระยะยาวปี 2570: ${kpi.target70 || '-'})</p>
+            <p>• <strong>โมเมนตัมและทิศทาง:</strong> อัตราการเปลี่ยนแปลง ${stat.growthRateYoY > 0 ? '+' : ''}${stat.growthRateYoY}% ต่อปี (เกณฑ์ประเมิน: <strong>${kpi.direction}</strong>)</p>
+          </div>
+        </div>
+
+        <!-- Section C: Risk Detection & Bottlenecks -->
+        <div class="ai-section-box">
+          <div class="ai-section-title"><span>⚠️ C. Risk Detection & Bottlenecks (ความเสี่ยงและจุดคอขวด)</span></div>
+          <div class="ai-section-content">
+            <p>• <strong>ระดับความเสี่ยงเชิงยุทธศาสตร์:</strong> <span class="badge-status ${stat.riskLevel === 'LOW' ? 'pass' : stat.riskLevel === 'MODERATE' ? 'warn' : 'fail'}">${stat.riskLevel}</span></p>
+            <p>• <strong>จุดคอขวดที่ต้องเฝ้าระวัง:</strong> ${kpi.lineage ? `มีการปรับเปลี่ยนนิยาม/เกณฑ์ตัวชี้วัด (${kpi.lineage}) ส่งผลต่อความต่อเนื่องของฐานข้อมูล ต้องเน้นย้ำมาตรฐานข้อมูลใน 26 อำเภอ` : `ความครอบคลุมในการส่งต่อข้อมูลระหว่างหน่วยบริการปฐมภูมิ (รพ.สต.) และโรงพยาบาลชุมชน (รพช.)`}</p>
+          </div>
+        </div>
+
+        <!-- Section D: Strategic Interventions -->
+        <div class="ai-section-box">
+          <div class="ai-section-title"><span>🎯 D. Strategic Interventions (มาตรการเชิงรุกและแผนงานเร่งรัด)</span></div>
+          <div class="ai-section-content">
+            <ul>
+              <li><strong>มาตรการขับเคลื่อนหลัก:</strong> ${domain.strategy}</li>
+              <li><strong>กลไกเชิงพื้นที่ 26 อำเภอ:</strong> บูรณาการผ่านคณะกรรมการพัฒนาคุณภาพชีวิตระดับอำเภอ (พชอ. Plus) และ Health Literacy Center (HLC)</li>
+              <li><strong>โครงการเร่งรัดแนะนำ:</strong> <strong>${domain.project}</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Section E: Executive Decision Support -->
+        <div class="executive-decision-box">
+          <div class="executive-decision-header">
+            <span>⚡ E. Executive Decision Support (ข้อเสนอเพื่อการตัดสินใจของผู้บริหาร)</span>
+          </div>
+          <div class="executive-decision-text">
+            ${stat.probabilityOfAchievement >= 70 
+              ? `"ผลการพยากรณ์อยู่ในเกณฑ์ On Track (${stat.probabilityOfAchievement}%) เสนอให้ผู้บริหารเห็นชอบให้ดำเนินการตามแผนงานปกติ และมอบหมายกลุ่มงานที่รับผิดชอบกำกับติดตามผลลัพธ์รายไตรมาสอย่างต่อเนื่อง"` 
+              : `"ตัวชี้วัดมีความเสี่ยงที่จะไม่บรรลุเป้าหมาย (Forecast: ${stat.baseline} vs Target: ${stat.targetValue}) เสนอให้ผู้บริหารสั่งการ 'เร่งรัดมาตรการ Fast-Track' และจัดประชุม War Room ร่วมกับ 26 อำเภอภายใน 30 วัน"`
+            }
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-insight-footer">
+      <div style="margin-right: auto; display: flex; gap: 0.5rem; align-items: center;">
+        <span class="meta-pill">
+          <span class="meta-pill-label">Engine:</span> <strong>${currentModel.model_name} (Auto Free Tier)</strong>
+        </span>
+        <span class="meta-pill">
+          <span class="meta-pill-label">Target 69:</span> <strong>${kpi.target69 || '-'} ${kpi.unit}</strong>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="printOnePageLandscapeReport()" title="พิมพ์รายงาน One Page 16:9 แนวนอน 1 แผ่น">📑 พิมพ์รายงาน</button>
+      <button class="btn-close-modal" onclick="closeAIPredictionFullscreenModal()">ปิดหน้าต่าง</button>
+    </div>
+  `;
+
+  modal.classList.add('show');
+  setTimeout(() => renderAIPredictionModalChart(kpi, stat, horizon), 60);
+}
+
+function renderAIPredictionModalChart(kpi, stat, horizon) {
+  const canvas = document.getElementById('chart-ai-prediction-modal');
+  if (!canvas) return;
+
+  if (AppState.charts.aiPredictionModal) {
+    AppState.charts.aiPredictionModal.destroy();
+    AppState.charts.aiPredictionModal = null;
+  }
+
+  const ctx = canvas.getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const pointBorder = isDark ? '#0f172a' : '#ffffff';
+
+  const labels = ['2566', '2567', '2568', '2569 (Forecast)', '2570 (เป้า)'];
+  const a66 = extractNumber(kpi.actual66);
+  const a67 = extractNumber(kpi.actual67);
+  const a68 = extractNumber(kpi.actual68);
+
+  const t66 = extractNumber(kpi.target66);
+  const t67 = extractNumber(kpi.target67);
+  const t68 = extractNumber(kpi.target68);
+  const t69 = extractNumber(kpi.target69);
+  const t70 = extractNumber(kpi.target70);
+
+  const gradActual = ctx.createLinearGradient(0, 0, 0, 240);
+  gradActual.addColorStop(0, 'rgba(13, 148, 136, 0.25)');
+  gradActual.addColorStop(1, 'rgba(13, 148, 136, 0.01)');
+
+  AppState.charts.aiPredictionModal = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'ผลงานจริง + Baseline Forecast',
+          data: [a66, a67, a68, stat.baseline, null],
+          borderColor: '#0d9488',
+          borderWidth: 3.5,
+          backgroundColor: gradActual,
+          pointBackgroundColor: [
+            getKPIPointColor(kpi, '66') || '#0d9488',
+            getKPIPointColor(kpi, '67') || '#0d9488',
+            getKPIPointColor(kpi, '68') || '#0d9488',
+            stat.probabilityOfAchievement >= 70 ? '#10b981' : '#ef4444',
+            '#0d9488'
+          ],
+          pointBorderColor: pointBorder,
+          pointBorderWidth: 2.5,
+          pointRadius: 7,
+          pointHoverRadius: 10,
+          fill: true,
+          tension: 0.25
+        },
+        {
+          label: 'Optimistic (+Intervention)',
+          data: [null, null, a68, stat.optimistic, null],
+          borderColor: '#10b981',
+          borderDash: [3, 3],
+          borderWidth: 2,
+          pointBackgroundColor: '#10b981',
+          pointBorderColor: pointBorder,
+          pointRadius: 5,
+          fill: false,
+          tension: 0.15
+        },
+        {
+          label: 'Pessimistic (Risk)',
+          data: [null, null, a68, stat.pessimistic, null],
+          borderColor: '#ef4444',
+          borderDash: [3, 3],
+          borderWidth: 2,
+          pointBackgroundColor: '#ef4444',
+          pointBorderColor: pointBorder,
+          pointRadius: 5,
+          fill: false,
+          tension: 0.15
+        },
+        {
+          label: 'เป้าหมายยุทธศาสตร์ (Target)',
+          data: [t66, t67, t68, t69, t70],
+          borderColor: '#94a3b8',
+          borderDash: [6, 6],
+          borderWidth: 2.5,
+          pointBackgroundColor: '#94a3b8',
+          pointBorderColor: pointBorder,
+          pointRadius: 5,
+          fill: false,
+          tension: 0.1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { grid: { color: gridColor }, ticks: { color: textColor }, title: { display: true, text: kpi.unit || '', color: textColor } },
+        x: { grid: { display: false }, ticks: { color: textColor } }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+
+function closeAIPredictionFullscreenModal() {
+  const modal = document.getElementById('ai-prediction-fullscreen-modal');
+  if (modal) modal.classList.remove('show');
+}
+
+function printOnePageLandscapeReport() {
+  const aiModal = document.getElementById('ai-prediction-fullscreen-modal');
+  const kpiModal = document.getElementById('kpi-detail-modal');
+
+  let printClass = '';
+  if (aiModal && aiModal.classList.contains('show')) {
+    printClass = 'print-mode-ai-modal';
+  } else if (kpiModal && kpiModal.classList.contains('show')) {
+    printClass = 'print-mode-kpi-modal';
+  }
+
+  if (printClass) {
+    document.body.classList.add(printClass);
+  }
+
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      if (printClass) {
+        document.body.classList.remove(printClass);
+      }
+    }, 1200);
+  }, 100);
+}
+
+function copyAIPredictionModalText(kpiId) {
+  const el = document.getElementById(`ai-modal-brief-content-${kpiId}`);
+  if (el) {
+    navigator.clipboard.writeText(el.innerText).then(() => alert('คัดลอกบทวิเคราะห์และข้อเสนอเชิงบริหารเรียบร้อยแล้ว'));
+  }
+}
+
+function copyAICenterResult() {
+  const el = document.getElementById('ai-center-result-text');
+  if (el) {
+    navigator.clipboard.writeText(el.innerText).then(() => alert('คัดลอกผลการพยากรณ์และบทวิเคราะห์เรียบร้อยแล้ว'));
+  }
+}
+
+// 15. Audit Log Modal Handlers
+function openAuditLogModal() {
+  const modal = document.getElementById('ai-audit-log-modal');
+  const container = document.getElementById('ai-audit-log-table-container');
+  if (!modal || !container) return;
+
+  const logs = AIAuditLogger.getLogs();
+  if (logs.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-muted);">ยังไม่มีประวัติการพยากรณ์</div>`;
+  } else {
+    container.innerHTML = `
+      <table class="audit-log-table">
+        <thead>
+          <tr>
+            <th>เวลา</th>
+            <th>รหัส KPI</th>
+            <th>Model ID</th>
+            <th>Forecast</th>
+            <th>Confidence</th>
+            <th>Risk</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logs.map(l => `
+            <tr>
+              <td>${new Date(l.timestamp).toLocaleTimeString('th-TH')}</td>
+              <td><strong>${l.kpi_id}</strong></td>
+              <td>${l.model_name || l.model_id}</td>
+              <td>${l.prediction !== null ? l.prediction : '-'}</td>
+              <td>${l.confidence}%</td>
+              <td><span class="badge-status ${l.risk_level === 'LOW' ? 'pass' : l.risk_level === 'MODERATE' ? 'warn' : 'fail'}">${l.risk_level}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  modal.classList.add('show');
+}
+
+function closeAuditLogModal() {
+  const modal = document.getElementById('ai-audit-log-modal');
+  if (modal) modal.classList.remove('show');
+}
+
+function clearAuditLog() {
+  if (confirm('ต้องการล้างประวัติ Audit Log ทั้งหมดหรือไม่?')) {
+    AIAuditLogger.clear();
+    openAuditLogModal();
+  }
+}
+
+// 16. AI Model Catalog in Settings
+function renderModelCatalog() {
+  const container = document.getElementById('ai-model-catalog-container');
+  if (!container) return;
+
+  const models = GeminiModelManager.registry;
+  const current = GeminiModelManager.getCurrentModel();
+
+  container.innerHTML = models.map(m => `
+    <div class="catalog-model-card ${m.model_id === current.model_id ? 'active-primary' : ''}">
+      <div class="catalog-model-info">
+        <div class="catalog-model-name">
+          ${m.model_name} ${m.model_id === current.model_id ? '🌟 (Active Primary)' : ''}
+        </div>
+        <div class="catalog-model-tags">
+          <span class="tag-free-tier">FREE TIER</span>
+          <span>Gen: ${m.generation}</span>
+          <span>Status: ${m.status}</span>
+          <span>Score: ${m.score}/100</span>
+        </div>
+      </div>
+      <div style="font-size:0.72rem; color:var(--text-muted); text-align:right;">
+        ${m.recommended_for}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function checkGeminiModelUpdates() {
+  const res = await GeminiModelManager.checkCatalogUpdates();
+  updateAIStatusUI();
+  renderModelCatalog();
+  alert(`ตรวจสอบ Model Catalog เรียบร้อยแล้ว (สถานะ: ${res.status}, โมเดลปัจจุบัน: ${res.currentModel.model_name})`);
+}
+
+function updateAIModelSelectionMode(mode) {
+  GeminiModelManager.config.mode = mode;
+  GeminiModelManager.saveConfig();
+  updateAIStatusUI();
+}
+
+// 17. Executive Reports Matrix
+function populateReportsMatrix() {
+  const container = document.getElementById('report-matrix-container');
+  if (!container) return;
+
+  container.innerHTML = `
+    <table class="kpi-table">
+      <thead>
+        <tr>
+          <th rowspan="2" class="col-kpi-id">รหัส</th>
+          <th rowspan="2" class="col-kpi-name">ชื่อตัวชี้วัด</th>
+          <th rowspan="2">ยุทธศาสตร์</th>
+          <th rowspan="2" class="col-num">หน่วยวัด</th>
+          
+          <th colspan="2" class="col-year-group">ปี 2566</th>
+          <th colspan="2" class="col-year-group">ปี 2567</th>
+          <th colspan="2" class="col-year-group">ปี 2568</th>
+          <th colspan="2" class="col-year-group">ปี 2569</th>
+          <th colspan="2" class="col-year-group">ปี 2570</th>
+        </tr>
+        <tr class="sub-header-row">
+          <th class="col-num col-sub-header">เป้าหมาย</th>
+          <th class="col-num col-sub-header">ผลงาน</th>
+          
+          <th class="col-num col-sub-header">เป้าหมาย</th>
+          <th class="col-num col-sub-header">ผลงาน</th>
+          
+          <th class="col-num col-sub-header">เป้าหมาย</th>
+          <th class="col-num col-sub-header">ผลงาน</th>
+          
+          <th class="col-num col-sub-header">เป้าหมาย</th>
+          <th class="col-num col-sub-header">ผลงาน</th>
+          
+          <th class="col-num col-sub-header">เป้าหมาย</th>
+          <th class="col-num col-sub-header">ผลงาน</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${AppState.kpiData.map(k => `
+          <tr>
+            <td class="col-kpi-id"><span class="kpi-id-pill">${k.id}</span></td>
+            <td class="col-kpi-name"><strong>${k.name}</strong></td>
+            <td>${k.strategy}</td>
+            <td class="col-num">${k.unit}</td>
+            
+            <!-- ปี 2566 -->
+            <td class="col-num col-target">${k.target66 || '-'}</td>
+            <td class="col-num">${k.actual66 !== null && k.actual66 !== undefined && k.actual66 !== '' ? formatActualWithColor(k, '66') : '-'}</td>
+            
+            <!-- ปี 2567 -->
+            <td class="col-num col-target">${k.target67 || '-'}</td>
+            <td class="col-num">${formatActualWithColor(k, '67')}</td>
+            
+            <!-- ปี 2568 -->
+            <td class="col-num col-target">${k.target68 || '-'}</td>
+            <td class="col-num">${formatActualWithColor(k, '68')}</td>
+            
+            <!-- ปี 2569 -->
+            <td class="col-num col-target">${k.target69 || '-'}</td>
+            <td class="col-num">${k.actual69 !== undefined && k.actual69 !== null && k.actual69 !== '' ? formatActualWithColor(k, '69') : '-'}</td>
+            
+            <!-- ปี 2570 -->
+            <td class="col-num col-target">${k.target70 || '-'}</td>
+            <td class="col-num">${k.actual70 !== undefined && k.actual70 !== null && k.actual70 !== '' ? formatActualWithColor(k, '70') : '-'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// 18. Overview Chart Renderers
+function renderAllCharts() {
+  if (typeof Chart === 'undefined') return;
+
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const textColor = isDark ? '#94a3b8' : '#475569';
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+  Chart.defaults.color = textColor;
+  Chart.defaults.font.family = "'IBM Plex Sans Thai', sans-serif";
+
+  renderExecutiveAchievementChart(gridColor, textColor);
+}
+
+function renderExecutiveAchievementChart(gridColor, textColor) {
+  const canvas = document.getElementById('chart-strategic-achievement');
+  if (!canvas) return;
+
+  if (AppState.charts.strategic) AppState.charts.strategic.destroy();
+
+  const labels = ['ยุทธศาสตร์ 1 (PP&P)', 'ยุทธศาสตร์ 2 (Service)', 'ยุทธศาสตร์ 3 (People)', 'ยุทธศาสตร์ 4 (Governance)', 'ยุทธศาสตร์ 5 (Consumer)'];
+  const passRates = [1, 2, 3, 4, 5].map(num => {
+    const kpis = AppState.kpiData.filter(k => k.strategy.includes(`ยุทธศาสตร์ที่ ${num}`));
+    let pass = 0;
+    kpis.forEach(k => {
+      if (evaluateStatus(k, '68').status === 'pass') pass++;
+    });
+    return kpis.length > 0 ? ((pass / kpis.length) * 100).toFixed(1) : 0;
+  });
+
+  AppState.charts.strategic = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '% ความสำเร็จปี 2568',
+        data: passRates,
+        backgroundColor: ['#0ea5e9', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true, max: 100, grid: { color: gridColor } },
+        x: { grid: { display: false } }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+
+// 19. Google Sheets Live GViz Fetching
+async function fetchLiveData(isManual = false) {
+  showSyncIndicator('syncing', 'กำลังซิงค์ Google Sheet...');
+
+  try {
+    let newData = null;
+
+    if (AppState.gasEndpoint) {
+      const res = await fetch(AppState.gasEndpoint);
+      const json = await res.json();
+      if (json && json.data) newData = json.data;
+    }
+
+    if (!newData) {
+      const gvizUrl = `https://docs.google.com/spreadsheets/d/${AppState.sheetId}/gviz/tq?tqx=out:json&gid=${AppState.gid}`;
+      const response = await fetch(gvizUrl);
+      const text = await response.text();
+      const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+      const gvizData = JSON.parse(jsonStr);
+
+      if (gvizData && gvizData.table && gvizData.table.rows) {
+        const rows = gvizData.table.rows;
+        let headerIdx = -1;
+        for (let i = 0; i < rows.length; i++) {
+          const val = rows[i].c[0]?.v?.toString().trim();
+          if (val === 'KPI_ID') { headerIdx = i; break; }
+        }
+        if (headerIdx === -1) headerIdx = 0;
+
+        const kpis = [];
+        for (let r = headerIdx + 1; r < rows.length; r++) {
+          const c = rows[r].c;
+          if (!c || !c[0] || !c[0].v || !c[0].v.toString().startsWith('KPI')) continue;
+
+          kpis.push({
+            id: c[0]?.v?.toString().trim() || '',
+            order: c[1]?.v?.toString().trim() || '',
+            name: c[2]?.v?.toString().trim() || '',
+            strategy: c[3]?.v?.toString().trim() || '',
+            objective: c[4]?.v?.toString().trim() || '',
+            unit: c[5]?.v?.toString().trim() || '',
+            direction: c[6]?.v?.toString().trim() || 'ยิ่งมากยิ่งดี',
+            target66: c[7]?.f || c[7]?.v || null,
+            actual66: c[8]?.f || c[8]?.v || null,
+            target67: c[9]?.f || c[9]?.v || null,
+            actual67: c[10]?.f || c[10]?.v || null,
+            target68: c[11]?.f || c[11]?.v || null,
+            actual68: c[12]?.f || c[12]?.v || null,
+            target69: c[13]?.f || c[13]?.v || null,
+            actual69: c[14]?.f || c[14]?.v || null,
+            target70: c[15]?.f || c[15]?.v || null,
+            lineage: c[16]?.v?.toString().trim() || '',
+            notes: c[17]?.v?.toString().trim() || ''
+          });
+        }
+        if (kpis.length > 0) newData = kpis;
+      }
+    }
+
+    if (newData && newData.length > 0) {
+      const overrides = JSON.parse(localStorage.getItem('kpi_local_overrides') || '{}');
+      AppState.kpiData = newData.map(k => overrides[k.id] ? { ...k, ...overrides[k.id] } : k);
+      AppState.lastSyncTime = new Date();
+      showSyncIndicator('success', `อัปเดตสด: ${AppState.lastSyncTime.toLocaleTimeString('th-TH')}`);
+      renderApp();
+    } else {
+      showSyncIndicator('success', `ใช้ข้อมูลล่าสุด (${AppState.kpiData.length} ตัวชี้วัด)`);
+    }
+  } catch (err) {
+    console.warn('Live fetch warning:', err);
+    showSyncIndicator('error', 'ออฟไลน์ / ใช้ข้อมูลแคช');
+  }
+}
+
+function showSyncIndicator(status, message) {
+  const pill = document.getElementById('sync-status-pill');
+  if (!pill) return;
+  const dot = pill.querySelector('.pulse-dot');
+  const text = pill.querySelector('.sync-text');
+
+  if (dot) {
+    dot.className = `pulse-dot ${status === 'syncing' ? 'syncing' : status === 'error' ? 'error' : ''}`;
+  }
+  if (text) text.textContent = message;
+}
+
+function setupAutoSync() {
+  if (AppState.syncTimer) clearInterval(AppState.syncTimer);
+  if (AppState.autoSyncInterval > 0) {
+    AppState.syncTimer = setInterval(() => {
+      fetchLiveData(false);
+    }, AppState.autoSyncInterval * 1000);
+  }
+}
+
+function saveSettings() {
+  const gasInput = document.getElementById('setting-gas-url');
+  const intervalSelect = document.getElementById('setting-sync-interval');
+
+  if (gasInput) {
+    AppState.gasEndpoint = gasInput.value.trim();
+    localStorage.setItem('kpi_gas_endpoint', AppState.gasEndpoint);
+  }
+
+  if (intervalSelect) {
+    AppState.autoSyncInterval = parseInt(intervalSelect.value, 10);
+    localStorage.setItem('kpi_sync_interval', AppState.autoSyncInterval.toString());
+    setupAutoSync();
+  }
+
+  alert('บันทึกการตั้งค่า Google Sheets เรียบร้อยแล้ว');
+  fetchLiveData(true);
+}

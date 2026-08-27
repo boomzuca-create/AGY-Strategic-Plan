@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GALACTIC EXECUTIVE KPI HUB // STARDATE 2400</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Google Fonts: Orbitron, Chakra Petch, Prompt -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;700;900&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            space: {
+              950: '#030712',
+              900: '#070d1e',
+              850: '#0c1630',
+              800: '#111f42',
+              700: '#1e3264'
+            },
+            cyan: {
+              glow: '#00f0ff',
+              dim: '#008b94'
+            },
+            plasma: {
+              pink: '#ff007f',
+              purple: '#b026ff',
+              green: '#00ff88',
+              amber: '#ffb300'
+            }
+          },
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            chakra: ['Chakra Petch', 'Prompt', 'sans-serif'],
+            sans: ['Chakra Petch', 'Prompt', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #030712;
+      color: #e2e8f0;
+      font-family: 'Chakra Petch', 'Prompt', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Sci-Fi Hologram Panel Styling */
+    .holo-panel {
+      background: rgba(11, 20, 44, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.08), inset 0 0 15px rgba(0, 240, 255, 0.03);
+      position: relative;
+    }
+
+    .holo-panel-purple {
+      background: rgba(22, 11, 44, 0.75);
+      border: 1px solid rgba(176, 38, 255, 0.3);
+      box-shadow: 0 0 25px rgba(176, 38, 255, 0.1);
+    }
+
+    .holo-panel-amber {
+      background: rgba(35, 20, 10, 0.75);
+      border: 1px solid rgba(255, 179, 0, 0.3);
+      box-shadow: 0 0 25px rgba(255, 179, 0, 0.1);
+    }
+
+    .holo-panel-emerald {
+      background: rgba(10, 35, 25, 0.75);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      box-shadow: 0 0 25px rgba(0, 255, 136, 0.1);
+    }
+
+    /* HUD Corner Brackets */
+    .hud-bracket {
+      position: relative;
+    }
+    .hud-bracket::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      width: 10px;
+      height: 10px;
+      border-top: 2px solid #00f0ff;
+      border-left: 2px solid #00f0ff;
+      pointer-events: none;
+    }
+    .hud-bracket::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      right: -1px;
+      width: 10px;
+      height: 10px;
+      border-bottom: 2px solid #00f0ff;
+      border-right: 2px solid #00f0ff;
+      pointer-events: none;
+    }
+
+    /* Glowing Neon Text */
+    .neon-text-cyan {
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.7), 0 0 20px rgba(0, 240, 255, 0.4);
+    }
+    .neon-text-green {
+      text-shadow: 0 0 10px rgba(0, 255, 136, 0.7), 0 0 20px rgba(0, 255, 136, 0.4);
+    }
+    .neon-text-purple {
+      text-shadow: 0 0 10px rgba(176, 38, 255, 0.7), 0 0 20px rgba(176, 38, 255, 0.4);
+    }
+    .neon-text-amber {
+      text-shadow: 0 0 10px rgba(255, 179, 0, 0.7), 0 0 20px rgba(255, 179, 0, 0.4);
+    }
+
+    /* Sci-Fi Scanline & Grid Effect */
+    .scanlines {
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.25) 50%
+      ), linear-gradient(
+        90deg,
+        rgba(255, 0, 0, 0.02),
+        rgba(0, 255, 0, 0.01),
+        rgba(0, 0, 255, 0.02)
+      );
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+    }
+
+    /* Custom Scrollbar */
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #070d1e;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #00f0ff55;
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #00f0ff;
+    }
+
+    /* Radar Scanning Animation */
+    @keyframes radar-sweep {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .radar-beam {
+      transform-origin: center;
+      animation: radar-sweep 4s linear infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulse-quantum {
+      animation: pulse-ring 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="relative min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
+
+  <!-- Interactive Space Canvas (Stars, Nebula & Particles) -->
+  <canvas id="spaceCanvas" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
+  <div class="fixed inset-0 scanlines z-10"></div>
+
+  <!-- Content Layer -->
+  <div class="relative z-20 flex-1 flex flex-col">
+
+    <!-- TOP HUD COMMAND BAR -->
+    <header class="sticky top-0 bg-space-950/80 backdrop-blur-xl border-b border-cyan-500/30 px-4 sm:px-8 py-3.5 shadow-2xl flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand & Fleet Emblem -->
+      <div class="flex items-center space-x-3.5">
+        <div class="relative flex items-center justify-center">
+          <div class="w-11 h-11 rounded-xl bg-cyan-950/80 border border-cyan-400 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+            <i data-lucide="orbit" class="w-6 h-6 text-cyan-glow animate-spin" style="animation-duration: 20s;"></i>
+          </div>
+          <span class="absolute -top-1 -right-1 flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+          </span>
+        </div>
+
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="font-orbitron font-extrabold text-base sm:text-xl text-white tracking-widest uppercase neon-text-cyan flex items-center gap-2">
+              EXECUTIVE KPI HUB <span class="text-xs font-chakra text-cyan-400 font-normal px-2 py-0.5 rounded border border-cyan-500/40 bg-cyan-950/50">SEC-2400</span>
+            </h1>
+          </div>
+          <p class="text-[11px] text-cyan-200/70 font-medium flex items-center gap-1.5 tracking-wide">
+            <i data-lucide="radio" class="w-3 h-3 text-cyan-glow"></i>
+            <span>สหพันธ์ดวงดาวอาร์คิมิดีส • ระบบติดตามตัวชี้วัดยุทธศาสตร์อวกาศและชีวภาพ</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Telemetry Controls & Filters -->
+      <div class="flex items-center flex-wrap gap-2.5">
+
+        <!-- Stardate Clock -->
+        <div class="hidden xl:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-space-900/90 border border-cyan-500/30 text-xs font-orbitron text-cyan-300">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-cyan-glow"></i>
+          <span id="stardateClock">STARDATE 2400.08.19</span>
+        </div>
+
+        <!-- Sector Selector -->
+        <div class="flex items-center bg-space-900/90 rounded-xl p-1 border border-cyan-500/30">
+          <span class="text-[11px] font-bold px-2 text-cyan-400 flex items-center gap-1">
+            <i data-lucide="compass" class="w-3 h-3"></i> เซกเตอร์:
+          </span>
+          <select id="sectorFilter" onchange="playSfx('click'); updateView();" class="bg-space-950 text-xs font-semibold text-cyan-200 py-1.5 px-2.5 rounded-lg border border-cyan-500/40 outline-none cursor-pointer hover:border-cyan-400 transition">
+            <option value="ALL" selected>ทุกพิกัดอวกาศ (Galactic All)</option>
+            <option value="ศูนย์บัญชาการโลก">ศูนย์บัญชาการโลก (Earth Core)</option>
+            <option value="โคโลนีดาวอังคาร">โคโลนีดาวอังคาร (Mars Colony-4)</option>
+            <option value="สถานีอวกาศวงโคจร">สถานีอวกาศวงโคจร (Orbital Station)</option>
+            <option value="ฐานขุดเจาะไททัน">ฐานขุดเจาะไททัน (Titan Mining)</option>
+            <option value="กองยานสำรวจอวกาศลึก">กองยานสำรวจอวกาศลึก (Deep Space)</option>
+          </select>
+        </div>
+
+        <!-- Epoch Year Selector -->
+        <div class="flex items-center bg-space-900/90 rounded-xl p-1 border border-cyan-500/30">
+          <span class="text-[11px] font-bold px-2 text-cyan-400 flex items-center gap-1">
+            <i data-lucide="milestone" class="w-3 h-3"></i> ศักราช:
+          </span>
+          <select id="yearFilter" onchange="playSfx('click'); updateView();" class="bg-space-950 text-xs font-semibold text-cyan-200 py-1.5 px-2.5 rounded-lg border border-cyan-500/40 outline-none cursor-pointer hover:border-cyan-400 transition">
+            <option value="ALL">ทุกศักราช (All Epochs)</option>
+            <option value="2400" selected>ค.ศ. 2400 (Epoch 2400)</option>
+            <option value="2399">ค.ศ. 2399 (Epoch 2399)</option>
+            <option value="2398">ค.ศ. 2398 (Epoch 2398)</option>
+          </select>
+        </div>
+
+        <!-- Audio Toggle Button -->
+        <button id="audioToggleBtn" onclick="toggleAudio()" class="p-2 rounded-xl bg-space-900/90 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 transition" title="สลับเสียงสังเคราะห์ไซไฟ (Sci-Fi Audio)">
+          <i data-lucide="volume-2" id="audioIcon" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Hyper-Warp Scan Button -->
+        <button id="warpBtn" onclick="triggerHyperspaceScan()" class="flex items-center space-x-1.5 bg-gradient-to-r from-cyan-600/80 to-blue-600/80 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-400/50 px-3.5 py-2 rounded-xl text-xs font-bold font-orbitron tracking-wider shadow-[0_0_15px_rgba(0,240,255,0.3)] transition transform active:scale-95">
+          <i data-lucide="zap" class="w-3.5 h-3.5 text-cyan-glow" id="warpIcon"></i>
+          <span>QUANTUM SCAN</span>
+        </button>
+
+        <!-- Quantum Live Link Pill -->
+        <div class="flex items-center px-3 py-1.5 rounded-xl bg-emerald-950/70 text-emerald-400 border border-emerald-500/40 text-xs font-bold shadow-[0_0_10px_rgba(0,255,136,0.2)]">
+          <span class="w-2 h-2 mr-2 bg-emerald-400 rounded-full animate-pulse"></span>
+          <span>QUANTUM SYNC: <span id="lastUpdated" class="text-white font-mono">LIVE</span></span>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- MAIN COCKPIT VIEWPORT -->
+    <main class="max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 flex-1">
+
+      <!-- TOP METRIC PODS (4 PODS) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+
+        <!-- POD 1: Total Core Metrics -->
+        <div class="holo-panel hud-bracket rounded-2xl p-5 hover:border-cyan-400 transition-all duration-300 group">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-orbitron font-semibold uppercase tracking-widest text-cyan-300/80">TOTAL STRATEGIC KPIS</p>
+              <h3 id="statTotal" class="text-3xl sm:text-4xl font-extrabold font-orbitron text-white mt-1.5 neon-text-cyan">0</h3>
+              <p class="text-xs text-cyan-200/60 mt-1 flex items-center gap-1">
+                <i data-lucide="cpu" class="w-3 h-3 text-cyan-400"></i> ตัวชี้วัดปฏิบัติการที่เปิดใช้งาน
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-glow shadow-[0_0_15px_rgba(0,240,255,0.3)] group-hover:scale-110 transition">
+              <i data-lucide="target" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center justify-between text-[10px] text-cyan-400 font-mono border-t border-cyan-500/20 pt-2">
+            <span>TELEMETRY: STABLE</span>
+            <span>NODE // ACTIVE</span>
+          </div>
+        </div>
+
+        <!-- POD 2: Optimal Target Achieved -->
+        <div class="holo-panel holo-panel-emerald hud-bracket rounded-2xl p-5 hover:border-emerald-400 transition-all duration-300 group">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-orbitron font-semibold uppercase tracking-widest text-emerald-300/80">OPTIMAL (PASS)</p>
+              <h3 id="statPass" class="text-3xl sm:text-4xl font-extrabold font-orbitron text-emerald-400 mt-1.5 neon-text-green">0</h3>
+              <p class="text-xs text-emerald-300/70 mt-1 flex items-center gap-1">
+                <i data-lucide="shield-check" class="w-3 h-3 text-emerald-400"></i> ผ่านเกณฑ์มาตรฐานสูงสุด
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(0,255,136,0.3)] group-hover:scale-110 transition">
+              <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center justify-between text-[10px] text-emerald-400 font-mono border-t border-emerald-500/20 pt-2">
+            <span>STATUS: 100% NOMINAL</span>
+            <span>DEFENSE: ACTIVE</span>
+          </div>
+        </div>
+
+        <!-- POD 3: Calibrating / In-Progress -->
+        <div class="holo-panel holo-panel-amber hud-bracket rounded-2xl p-5 hover:border-amber-400 transition-all duration-300 group">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-orbitron font-semibold uppercase tracking-widest text-amber-300/80">IN-CALIBRATION</p>
+              <h3 id="statProgress" class="text-3xl sm:text-4xl font-extrabold font-orbitron text-amber-400 mt-1.5 neon-text-amber">0</h3>
+              <p class="text-xs text-amber-300/70 mt-1 flex items-center gap-1">
+                <i data-lucide="activity" class="w-3 h-3 text-amber-400"></i> อยู่ระหว่างเร่งปรับเทียบสสาร
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-950/80 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-[0_0_15px_rgba(255,179,0,0.3)] group-hover:scale-110 transition">
+              <i data-lucide="clock" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center justify-between text-[10px] text-amber-400 font-mono border-t border-amber-500/20 pt-2">
+            <span>FLUX: DYNAMIC</span>
+            <span>SYNC RATE: 98.4%</span>
+          </div>
+        </div>
+
+        <!-- POD 4: Galactic Success Index -->
+        <div class="holo-panel holo-panel-purple hud-bracket rounded-2xl p-5 hover:border-plasma-purple transition-all duration-300 group">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-orbitron font-semibold uppercase tracking-widest text-purple-300/80">GALACTIC EFFICIENCY</p>
+              <h3 id="statRate" class="text-3xl sm:text-4xl font-extrabold font-orbitron text-purple-300 mt-1.5 neon-text-purple">0%</h3>
+              <div class="w-28 bg-space-950 rounded-full h-1.5 mt-2 border border-purple-500/30 overflow-hidden">
+                <div id="statRateBar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-1.5 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(176,38,255,0.7)]" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-purple-950/80 border border-purple-500/40 flex items-center justify-center text-purple-300 shadow-[0_0_15px_rgba(176,38,255,0.3)] group-hover:scale-110 transition">
+              <i data-lucide="sparkles" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center justify-between text-[10px] text-purple-400 font-mono border-t border-purple-500/20 pt-2">
+            <span>INDEX: QU-ALIGNED</span>
+            <span>STABILITY: OPTIMAL</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MIDDLE HOLOGRAPHIC RADAR & CHARTS -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Bar Chart: Target vs Actual Quantum Flux -->
+        <div class="lg:col-span-8 holo-panel hud-bracket rounded-2xl p-6 flex flex-col justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-cyan-500/20">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 bg-cyan-glow rounded-sm animate-pulse"></span>
+                <h3 class="font-orbitron font-bold text-white text-sm sm:text-base tracking-wider">QUANTUM FLUX: TARGET VS ACTUAL</h3>
+              </div>
+              <p class="text-xs text-cyan-200/70 mt-0.5">เปรียบเทียบเป้าหมายยุทธศาสตร์อวกาศและผลการดำเนินงานจริง</p>
+            </div>
+            <div class="flex items-center space-x-2 text-xs font-mono text-cyan-300">
+              <span class="px-2 py-0.5 bg-cyan-950 border border-cyan-500/40 rounded">BAR TELEMETRY</span>
+            </div>
+          </div>
+          <div class="relative flex-1 min-h-[300px] w-full">
+            <canvas id="barChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Radar & Sector Distribution -->
+        <div class="lg:col-span-4 space-y-6">
+          
+          <!-- Doughnut Chart -->
+          <div class="holo-panel hud-bracket rounded-2xl p-6 flex flex-col">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-cyan-500/20">
+              <h3 class="font-orbitron font-bold text-white text-sm tracking-wider">STATUS RATIO</h3>
+              <i data-lucide="pie-chart" class="w-4 h-4 text-cyan-400"></i>
+            </div>
+            <div class="relative flex-1 min-h-[220px] flex items-center justify-center">
+              <canvas id="doughnutChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Holographic Orbital Radar Widget -->
+          <div class="holo-panel hud-bracket rounded-2xl p-4 flex items-center justify-between bg-space-950/70 border-cyan-500/40">
+            <div class="space-y-1">
+              <div class="flex items-center gap-1.5 text-xs font-orbitron text-cyan-300 font-bold">
+                <i data-lucide="radar" class="w-4 h-4 text-cyan-glow"></i>
+                <span>ORBITAL TRAJECTORY</span>
+              </div>
+              <p class="text-[11px] text-cyan-200/60">พิกัดสถานี: Earth-Moon L2 Ring</p>
+              <div class="text-[10px] text-emerald-400 font-mono">SECTOR COMM: 100% LINKED</div>
+            </div>
+            <!-- Animated Radar Circle -->
+            <div class="relative w-16 h-16 rounded-full border border-cyan-500/40 flex items-center justify-center overflow-hidden bg-cyan-950/40">
+              <div class="absolute inset-2 rounded-full border border-cyan-500/20"></div>
+              <div class="absolute inset-4 rounded-full border border-cyan-500/10"></div>
+              <div class="absolute w-full h-full bg-gradient-to-tr from-transparent via-cyan-500/20 to-transparent radar-beam"></div>
+              <div class="w-1.5 h-1.5 bg-cyan-glow rounded-full shadow-[0_0_8px_#00f0ff]"></div>
+              <div class="absolute top-2 left-3 w-1 h-1 bg-emerald-400 rounded-full animate-ping"></div>
+              <div class="absolute bottom-3 right-4 w-1 h-1 bg-amber-400 rounded-full"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- DETAILED INTERSTELLAR KPI TELEMETRY TABLE -->
+      <div class="holo-panel hud-bracket rounded-2xl overflow-hidden flex flex-col">
+
+        <!-- Table Header & Controls -->
+        <div class="p-5 border-b border-cyan-500/30 flex flex-wrap items-center justify-between gap-4 bg-space-950/60">
+          <div>
+            <h3 class="font-orbitron font-bold text-white text-base tracking-wider flex items-center gap-2">
+              <span>STRATEGIC KPI REGISTRY // MATRIX 2400</span>
+              <span id="kpiCountBadge" class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-cyan-950 border border-cyan-500/50 text-cyan-300">0 MISSIONS</span>
+            </h3>
+            <p class="text-xs text-cyan-200/70 mt-0.5">กดปุ่ม <span class="text-cyan-glow font-bold">"CALIBRATE"</span> เพื่อปรับเทียบผลงานจริง หรือส่งข้อมูลผ่าน Quantum Entanglement</p>
+          </div>
+
+          <div class="flex items-center flex-wrap gap-2.5 w-full sm:w-auto">
+            <!-- Search Box -->
+            <div class="relative w-full sm:w-64">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-400"></i>
+              <input type="text" id="searchInput" oninput="updateView()" placeholder="ค้นหาตัวชี้วัด, รหัสภารกิจ, พิกัด..." class="w-full pl-9 pr-8 py-2 bg-space-950/90 border border-cyan-500/40 rounded-xl text-xs font-mono text-cyan-100 placeholder-cyan-500/50 focus:outline-none focus:border-cyan-glow focus:ring-1 focus:ring-cyan-glow transition shadow-inner">
+            </div>
+
+            <!-- Action: Deploy New Mission -->
+            <button onclick="playSfx('open'); openAddModal();" class="flex items-center space-x-1.5 bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 px-3 py-2 rounded-xl text-xs font-bold font-orbitron transition hover:shadow-[0_0_12px_rgba(0,240,255,0.3)]">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-cyan-glow"></i>
+              <span>DEPLOY KPI</span>
+            </button>
+
+            <!-- Action: Export Quantum CSV -->
+            <button onclick="playSfx('click'); exportQuantumCSV();" class="flex items-center space-x-1.5 bg-space-900 hover:bg-space-850 border border-cyan-500/30 text-cyan-200 px-3 py-2 rounded-xl text-xs font-bold font-orbitron transition hover:border-cyan-400">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-400"></i>
+              <span>EXPORT</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Table Data -->
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-space-900/90 text-cyan-300 font-orbitron text-[11px] tracking-wider uppercase border-b border-cyan-500/30">
+                <th class="py-3.5 px-4 font-bold">MISSION ID</th>
+                <th class="py-3.5 px-4 font-bold">SECTOR / พิกัด</th>
+                <th class="py-3.5 px-4 font-bold min-w-[260px]">ชื่อตัวชี้วัดยุทธศาสตร์อวกาศ</th>
+                <th class="py-3.5 px-4 text-center font-bold">ศักราช</th>
+                <th class="py-3.5 px-4 text-center font-bold">เป้าหมาย</th>
+                <th class="py-3.5 px-4 text-center font-bold">ผลงานจริง</th>
+                <th class="py-3.5 px-4 min-w-[150px] font-bold">ความก้าวหน้าควอนตัม</th>
+                <th class="py-3.5 px-4 text-center font-bold">สถานะ</th>
+                <th class="py-3.5 px-4 text-center font-bold">คำสั่ง</th>
+              </tr>
+            </thead>
+            <tbody id="kpiTableBody" class="divide-y divide-cyan-500/10 text-slate-200">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Footer -->
+        <div class="px-5 py-3 bg-space-950/90 border-t border-cyan-500/20 flex flex-wrap items-center justify-between text-xs text-cyan-400/80 font-mono">
+          <div>QUANTUM ENTANGLEMENT PROTOCOL // STARDATE 2400.08</div>
+          <div class="flex items-center gap-3">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> OPTIMAL (≥100%)</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> IN-CALIBRATION (&lt;100%)</span>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-cyan-500/20 bg-space-950/90 py-3.5 px-6 text-center text-xs text-cyan-400/60 font-orbitron">
+      FEDERATION INTERSTELLAR STRATEGIC COMMAND &copy; 2400 • ARCHIMEDES FLAGSHIP TERMINAL
+    </footer>
+
+  </div>
+
+  <!-- MODAL: CALIBRATE KPI -->
+  <div id="updateModal" class="fixed inset-0 bg-space-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="holo-panel hud-bracket rounded-2xl max-w-md w-full p-6 space-y-4 border-cyan-400 shadow-[0_0_30px_rgba(0,240,255,0.25)]">
+      
+      <div class="flex justify-between items-center pb-3 border-b border-cyan-500/30">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 bg-cyan-950 border border-cyan-500/50 text-cyan-glow rounded-xl">
+            <i data-lucide="sliders" class="w-4 h-4"></i>
+          </div>
+          <h4 class="font-orbitron font-bold text-white text-base tracking-wider">CALIBRATE QUANTUM KPI</h4>
+        </div>
+        <button onclick="playSfx('close'); closeModal();" class="text-cyan-400 hover:text-white p-1 rounded-lg hover:bg-cyan-950/60 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="kpiForm" class="space-y-4" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" id="modalKpiId">
+        
+        <div>
+          <label class="block text-xs font-bold text-cyan-300 mb-1 font-orbitron">MISSION SPECIFICATION</label>
+          <div class="bg-space-950/90 p-3 rounded-xl border border-cyan-500/30">
+            <span id="modalKpiIdBadge" class="font-mono text-xs font-bold text-cyan-glow block mb-0.5"></span>
+            <p id="modalKpiName" class="text-sm font-semibold text-white leading-relaxed"></p>
+            <p id="modalKpiCategory" class="text-xs text-cyan-300/70 mt-1 font-mono"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-cyan-300 mb-1 font-orbitron">TARGET VALUE</label>
+            <p id="modalTarget" class="text-sm font-bold text-cyan-200 bg-space-950/90 px-3 py-2.5 rounded-xl border border-cyan-500/30 font-mono"></p>
+          </div>
+          <div>
+            <label for="modalActual" class="block text-xs font-bold text-cyan-glow mb-1 font-orbitron">ACTUAL VALUE</label>
+            <input type="number" step="any" id="modalActual" required class="w-full px-3 py-2 bg-space-950 border border-cyan-400 rounded-xl text-sm font-bold text-white focus:ring-2 focus:ring-cyan-glow focus:outline-none transition font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label for="modalNotes" class="block text-xs font-bold text-cyan-300 mb-1 font-orbitron">LOG REMARKS (SPACE LOG)</label>
+          <textarea id="modalNotes" rows="2" placeholder="บันทึกข้อมูลสสาร การปรับเทียบสนามพลัง..." class="w-full px-3 py-2 bg-space-950 border border-cyan-500/30 rounded-xl text-xs text-cyan-100 focus:border-cyan-glow focus:outline-none transition"></textarea>
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2 border-t border-cyan-500/20">
+          <button type="button" onclick="playSfx('close'); closeModal();" class="px-4 py-2 text-xs font-orbitron font-bold text-cyan-300 hover:bg-space-900 rounded-xl transition">ABORT</button>
+          <button type="submit" class="px-4 py-2 text-xs font-orbitron font-bold bg-cyan-600 hover:bg-cyan-500 text-black rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.4)] transition flex items-center space-x-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>COMMIT DATA</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: DEPLOY NEW KPI -->
+  <div id="addModal" class="fixed inset-0 bg-space-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="holo-panel hud-bracket rounded-2xl max-w-md w-full p-6 space-y-4 border-cyan-400 shadow-[0_0_30px_rgba(0,240,255,0.25)]">
+      
+      <div class="flex justify-between items-center pb-3 border-b border-cyan-500/30">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 bg-cyan-950 border border-cyan-500/50 text-cyan-glow rounded-xl">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+          </div>
+          <h4 class="font-orbitron font-bold text-white text-base tracking-wider">DEPLOY NEW MISSION KPI</h4>
+        </div>
+        <button onclick="playSfx('close'); closeAddModal();" class="text-cyan-400 hover:text-white p-1 rounded-lg hover:bg-cyan-950/60 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="addKpiForm" class="space-y-3" onsubmit="handleAddKpiSubmit(event)">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-cyan-300 mb-1 font-orbitron">EPOCH (ศักราช)</label>
+            <select id="newKpiYear" required class="w-full px-3 py-2 bg-space-950 border border-cyan-500/40 rounded-xl text-xs font-mono text-cyan-200">
+              <option value="2400" selected>2400</option>
+              <option value="2399">2399</option>
+              <option value="2398">2398</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-cyan-300 mb-1 font-orbitron">SECTOR (พิกัด)</label>
+            <select id="newKpiCategory" required class="w-full px-3 py-2 bg-space-950 border border-cyan-500/40 rounded-xl text-xs font-sans text-cyan-200">
+              <option value="ศูนย์บัญชาการโลก" selected>ศูนย์บัญชาการโลก</option>
+              <option value="โคโลนีดาวอังคาร">โคโลนีดาวอังคาร</option>
+              <option value="สถานีอวกาศวงโคจร">สถานีอวกาศวงโคจร</option>
+              <option value="ฐานขุดเจาะไททัน">ฐานขุดเจาะไททัน</option>
+              <option value="กองยานสำรวจอวกาศลึก">กองยานสำรวจอวกาศลึก</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-cyan-300 mb-1 font-orbitron">MISSION NAME (ชื่อตัวชี้วัด)</label>
+          <input type="text" id="newKpiName" placeholder="เช่น การรักษาเสถียรภาพสนามพลังเกราะพลาสมา..." required class="w-full px-3 py-2 bg-space-950 border border-cyan-500/40 rounded-xl text-xs text-white focus:border-cyan-glow focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-cyan-300 mb-1 font-orbitron">TARGET</label>
+            <input type="number" step="any" id="newKpiTarget" placeholder="100" required class="w-full px-3 py-2 bg-space-950 border border-cyan-500/40 rounded-xl text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-cyan-300 mb-1 font-orbitron">ACTUAL</label>
+            <input type="number" step="any" id="newKpiActual" placeholder="0" required class="w-full px-3 py-2 bg-space-950 border border-cyan-500/40 rounded-xl text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-cyan-300 mb-1 font-orbitron">UNIT</label>
+            <input type="text" id="newKpiUnit" placeholder="%" value="%" required class="w-full px-3 py-2 bg-space-950 border border-cyan-500/40 rounded-xl text-xs font-mono text-white">
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2 border-t border-cyan-500/20">
+          <button type="button" onclick="playSfx('close'); closeAddModal();" class="px-4 py-2 text-xs font-orbitron font-bold text-cyan-300 hover:bg-space-900 rounded-xl transition">ABORT</button>
+          <button type="submit" class="px-4 py-2 text-xs font-orbitron font-bold bg-cyan-600 hover:bg-cyan-500 text-black rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.4)] transition flex items-center space-x-1.5">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>TRANSMIT</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // --- Sci-Fi 2400 Interstellar Mock Data ---
+    let kpiData = [
+      { id: "SEC-001", year: "2400", category: "ศูนย์บัญชาการโลก", name: "เสถียรภาพแกนพลังงานปฏิสสาร (Antimatter Core Stability)", target: 100, actual: 99.4, unit: "%", status: "Pass" },
+      { id: "SEC-002", year: "2400", category: "โคโลนีดาวอังคาร", name: "อัตราการสังเคราะห์ออกซิเจนไบโอสเฟียร์ (Biosphere O2 Generation)", target: 95, actual: 98.2, unit: "%", status: "Pass" },
+      { id: "SEC-003", year: "2400", category: "สถานีอวกาศวงโคจร", name: "การกระจายวัคซีนอนุภาคนาโนข้ามระบบสุริยะ (Nano-Med Distribution)", target: 90, actual: 91.5, unit: "%", status: "Pass" },
+      { id: "SEC-004", year: "2400", category: "กองยานสำรวจอวกาศลึก", name: "ประสิทธิภาพเกราะป้องกันสนามแม่เหล็กพลาสมา (Plasma Shield Integrity)", target: 95, actual: 88.0, unit: "%", status: "In-Progress" },
+      { id: "SEC-005", year: "2400", category: "ฐานขุดเจาะไททัน", name: "อัตราการสกัดแร่ฮีเลียม-3 และสสารมืด (Dark Matter Harvest Rate)", target: 500, actual: 460, unit: "KT", status: "In-Progress" },
+      { id: "SEC-006", year: "2400", category: "ศูนย์บัญชาการโลก", name: "ความเร็วการเชื่อมโยงโครงข่ายประสาทควอนตัม (Quantum Neural Grid)", target: 100, actual: 99.8, unit: "Qbps", status: "Pass" },
+      { id: "SEC-007", year: "2399", category: "โคโลนีดาวอังคาร", name: "การปรับสภาพชั้นบรรยากาศเทอร์ราฟอร์มมิ่ง เฟส 4 (Terraforming Phase 4)", target: 80, actual: 86.4, unit: "%", status: "Pass" },
+      { id: "SEC-008", year: "2399", category: "สถานีอวกาศวงโคจร", name: "การป้องกันการรบกวนของพายุสุริยะไอออนิก (Solar Flare Shielding)", target: 100, actual: 99.0, unit: "%", status: "Pass" },
+      { id: "SEC-009", year: "2398", category: "ฐานขุดเจาะไททัน", name: "การสำรวจชั้นน้ำแข็งใต้พิภพดวงจันทร์ยูโรปา (Europa Subsurface Probe)", target: 100, actual: 100, unit: "%", status: "Pass" }
+    ];
+
+    let barChartInstance = null;
+    let doughnutChartInstance = null;
+    let audioEnabled = true;
+    let audioCtx = null;
+
+    // --- Web Audio API Sci-Fi Synthesizer Sound FX ---
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSfx(type) {
+      if (!audioEnabled) return;
+      try {
+        initAudio();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(1400, now + 0.05);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'open') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        } else if (type === 'close') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } else if (type === 'warp') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(1800, now + 0.35);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'success') {
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          osc.start(now);
+          osc.stop(now + 0.2);
+
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(659.25, now + 0.08); // E5
+          gain2.gain.setValueAtTime(0.08, now + 0.08);
+          gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+          osc2.start(now + 0.08);
+          osc2.stop(now + 0.28);
+        }
+      } catch (e) {
+        console.log("Audio not allowed yet without user interaction");
+      }
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const icon = document.getElementById('audioIcon');
+      const btn = document.getElementById('audioToggleBtn');
+      if (audioEnabled) {
+        icon.setAttribute('data-lucide', 'volume-2');
+        btn.classList.remove('text-slate-600');
+        btn.classList.add('text-cyan-300');
+        playSfx('click');
+      } else {
+        icon.setAttribute('data-lucide', 'volume-x');
+        btn.classList.remove('text-cyan-300');
+        btn.classList.add('text-slate-600');
+      }
+      lucide.createIcons();
+    }
+
+    // --- Filter & Core Logic ---
+    function getFilteredData() {
+      const year = document.getElementById('yearFilter').value;
+      const sector = document.getElementById('sectorFilter').value;
+      const search = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      return kpiData.filter(item => {
+        const matchYear = (year === 'ALL' || item.year === year);
+        const matchSector = (sector === 'ALL' || item.category === sector);
+        const matchSearch = !search || 
+          item.name.toLowerCase().includes(search) || 
+          item.category.toLowerCase().includes(search) || 
+          item.id.toLowerCase().includes(search);
+        return matchYear && matchSector && matchSearch;
+      });
+    }
+
+    function renderStats(data) {
+      const total = data.length;
+      const pass = data.filter(d => d.status === 'Pass').length;
+      const progress = data.filter(d => d.status === 'In-Progress').length;
+      const rate = total > 0 ? Math.round((pass / total) * 100) : 0;
+
+      document.getElementById('statTotal').innerText = total;
+      document.getElementById('statPass').innerText = pass;
+      document.getElementById('statProgress').innerText = progress;
+      document.getElementById('statRate').innerText = `${rate}%`;
+      document.getElementById('statRateBar').style.width = `${rate}%`;
+      document.getElementById('kpiCountBadge').innerText = `${total} MISSIONS`;
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('kpiTableBody');
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="text-center py-10 text-cyan-400/50 font-mono">
+              <div class="flex flex-col items-center space-y-2">
+                <i data-lucide="alert-triangle" class="w-8 h-8 text-amber-400"></i>
+                <p>NO QUANTUM TELEMETRY DATA FOUND FOR GIVEN SECTOR</p>
+              </div>
+            </td>
+          </tr>`;
+        lucide.createIcons();
+        return;
+      }
+
+      data.forEach(item => {
+        const rawPct = (item.actual / item.target) * 100;
+        const displayPct = Math.round(rawPct);
+        const barWidth = Math.min(Math.max(rawPct, 0), 100);
+
+        const statusBadge = item.status === 'Pass'
+          ? `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-orbitron font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 gap-1 shadow-[0_0_8px_rgba(0,255,136,0.3)]"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> OPTIMAL</span>`
+          : `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-orbitron font-bold bg-amber-950/80 text-amber-300 border border-amber-500/50 gap-1 shadow-[0_0_8px_rgba(255,179,0,0.3)]"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> CALIBRATING</span>`;
+
+        const row = document.createElement('tr');
+        row.className = "hover:bg-cyan-950/30 transition border-b border-cyan-500/10";
+        row.innerHTML = `
+          <td class="py-3.5 px-4 font-orbitron font-bold text-cyan-glow">${item.id}</td>
+          <td class="py-3.5 px-4 text-xs font-semibold text-cyan-200/90">
+            <span class="bg-space-950/80 px-2 py-1 rounded-md border border-cyan-500/30">${item.category}</span>
+          </td>
+          <td class="py-3.5 px-4 font-semibold text-white">
+            <div class="leading-snug">${item.name}</div>
+          </td>
+          <td class="py-3.5 px-4 text-center font-orbitron text-xs text-cyan-300">${item.year}</td>
+          <td class="py-3.5 px-4 text-center font-mono font-medium text-slate-300">${item.target} <span class="text-[10px] text-cyan-400">${item.unit}</span></td>
+          <td class="py-3.5 px-4 text-center font-mono font-bold ${item.actual >= item.target ? 'text-emerald-400' : 'text-cyan-glow'}">${item.actual} <span class="text-[10px] text-cyan-400">${item.unit}</span></td>
+          <td class="py-3.5 px-4">
+            <div class="w-36">
+              <div class="flex justify-between text-[10px] font-orbitron mb-1 ${displayPct >= 100 ? 'text-emerald-400' : 'text-cyan-300'}">
+                <span>FLUX</span>
+                <span>${displayPct}%</span>
+              </div>
+              <div class="w-full bg-space-950 rounded-full h-1.5 border border-cyan-500/20 overflow-hidden">
+                <div class="${displayPct >= 100 ? 'bg-gradient-to-r from-emerald-500 to-cyan-400 shadow-[0_0_8px_#00ff88]' : 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_8px_#00f0ff]'} h-1.5 rounded-full transition-all duration-300" style="width: ${barWidth}%"></div>
+              </div>
+            </div>
+          </td>
+          <td class="py-3.5 px-4 text-center">${statusBadge}</td>
+          <td class="py-3.5 px-4 text-center">
+            <button onclick="playSfx('open'); openModal('${item.id}');" class="px-2.5 py-1 text-cyan-300 hover:text-white bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 rounded-lg text-xs font-orbitron font-bold inline-flex items-center space-x-1 transition shadow-sm hover:shadow-[0_0_10px_rgba(0,240,255,0.4)]">
+              <i data-lucide="sliders" class="w-3 h-3 text-cyan-glow"></i>
+              <span>CALIBRATE</span>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+      lucide.createIcons();
+    }
+
+    function renderCharts(data) {
+      const labels = data.map(d => d.name.length > 14 ? d.name.substring(0, 14) + '...' : d.name);
+      const targetValues = data.map(d => d.target);
+      const actualValues = data.map(d => d.actual);
+
+      // Bar Chart with Futuristic Neon Styling
+      if (barChartInstance) barChartInstance.destroy();
+      const ctxBar = document.getElementById('barChart').getContext('2d');
+      
+      const targetGradient = ctxBar.createLinearGradient(0, 0, 0, 300);
+      targetGradient.addColorStop(0, 'rgba(100, 116, 139, 0.7)');
+      targetGradient.addColorStop(1, 'rgba(30, 41, 59, 0.2)');
+
+      const actualGradient = ctxBar.createLinearGradient(0, 0, 0, 300);
+      actualGradient.addColorStop(0, 'rgba(0, 240, 255, 0.9)');
+      actualGradient.addColorStop(1, 'rgba(176, 38, 255, 0.3)');
+
+      barChartInstance = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { 
+              label: 'TARGET FLUX', 
+              data: targetValues, 
+              backgroundColor: targetGradient,
+              borderColor: 'rgba(148, 163, 184, 0.6)',
+              borderWidth: 1,
+              borderRadius: 4,
+              barPercentage: 0.65
+            },
+            { 
+              label: 'ACTUAL TELEMETRY', 
+              data: actualValues, 
+              backgroundColor: actualGradient,
+              borderColor: '#00f0ff',
+              borderWidth: 1.5,
+              borderRadius: 4,
+              barPercentage: 0.65
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { 
+              position: 'bottom',
+              labels: {
+                color: '#94a3b8',
+                font: { family: 'Orbitron', size: 11 }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(7, 13, 30, 0.95)',
+              borderColor: '#00f0ff',
+              borderWidth: 1,
+              titleColor: '#00f0ff',
+              bodyColor: '#ffffff',
+              titleFont: { family: 'Chakra Petch' },
+              callbacks: {
+                label: function(ctx) {
+                  const item = data[ctx.dataIndex];
+                  return ` ${ctx.dataset.label}: ${ctx.raw} ${item ? item.unit : ''}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { 
+              beginAtZero: true,
+              grid: { color: 'rgba(0, 240, 255, 0.08)' },
+              ticks: { color: '#64748b', font: { family: 'Orbitron', size: 10 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#94a3b8', font: { family: 'Chakra Petch', size: 10 } }
+            }
+          }
+        }
+      });
+
+      // Doughnut Chart
+      const passCount = data.filter(d => d.status === 'Pass').length;
+      const progressCount = data.filter(d => d.status === 'In-Progress').length;
+
+      if (doughnutChartInstance) doughnutChartInstance.destroy();
+      const ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+      doughnutChartInstance = new Chart(ctxDoughnut, {
+        type: 'doughnut',
+        data: {
+          labels: ['OPTIMAL', 'CALIBRATING'],
+          datasets: [{
+            data: [passCount, progressCount],
+            backgroundColor: ['#00ff88', '#ffb300'],
+            borderColor: '#030712',
+            borderWidth: 3,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '72%',
+          plugins: { 
+            legend: { 
+              position: 'bottom',
+              labels: {
+                color: '#94a3b8',
+                font: { family: 'Orbitron', size: 10 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateView() {
+      const data = getFilteredData();
+      renderStats(data);
+      renderTable(data);
+      renderCharts(data);
+    }
+
+    // --- Modal Handling ---
+    function openModal(id) {
+      const item = kpiData.find(d => d.id === id);
+      if (!item) return;
+
+      document.getElementById('modalKpiId').value = item.id;
+      document.getElementById('modalKpiIdBadge').innerText = `// NODE: ${item.id}`;
+      document.getElementById('modalKpiName').innerText = item.name;
+      document.getElementById('modalKpiCategory').innerText = `SECTOR: ${item.category} • EPOCH: ${item.year}`;
+      document.getElementById('modalTarget').innerText = `${item.target} ${item.unit}`;
+      document.getElementById('modalActual').value = item.actual;
+      document.getElementById('modalNotes').value = item.notes || '';
+      document.getElementById('updateModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('updateModal').classList.add('hidden');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('modalKpiId').value;
+      const newActual = parseFloat(document.getElementById('modalActual').value);
+      const notes = document.getElementById('modalNotes').value;
+
+      const targetIndex = kpiData.findIndex(d => d.id === id);
+      if (targetIndex > -1) {
+        kpiData[targetIndex].actual = newActual;
+        kpiData[targetIndex].status = newActual >= kpiData[targetIndex].target ? 'Pass' : 'In-Progress';
+        kpiData[targetIndex].notes = notes;
+        
+        closeModal();
+        updateView();
+        playSfx('success');
+
+        Swal.fire({
+          background: '#070d1e',
+          color: '#00f0ff',
+          icon: 'success',
+          title: 'QUANTUM CALIBRATION COMPLETE',
+          text: `พิกัด ${id} ได้รับการอัปเดตผลงานสู่ ${newActual} เรียบร้อยแล้ว`,
+          showConfirmButton: false,
+          timer: 1600,
+          customClass: {
+            popup: 'border border-cyan-400 shadow-[0_0_20px_rgba(0,240,255,0.4)]'
+          }
+        });
+      }
+    }
+
+    function openAddModal() {
+      document.getElementById('addKpiForm').reset();
+      document.getElementById('addModal').classList.remove('hidden');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.add('hidden');
+    }
+
+    function handleAddKpiSubmit(e) {
+      e.preventDefault();
+      const nextNum = kpiData.length + 1;
+      const newId = `SEC-${String(nextNum).padStart(3, '0')}`;
+      const year = document.getElementById('newKpiYear').value;
+      const category = document.getElementById('newKpiCategory').value;
+      const name = document.getElementById('newKpiName').value;
+      const target = parseFloat(document.getElementById('newKpiTarget').value);
+      const actual = parseFloat(document.getElementById('newKpiActual').value);
+      const unit = document.getElementById('newKpiUnit').value;
+
+      const newItem = {
+        id: newId,
+        year: year,
+        category: category,
+        name: name,
+        target: target,
+        actual: actual,
+        unit: unit,
+        status: actual >= target ? 'Pass' : 'In-Progress'
+      };
+
+      kpiData.unshift(newItem);
+      closeAddModal();
+      updateView();
+      playSfx('success');
+
+      Swal.fire({
+        background: '#070d1e',
+        color: '#00f0ff',
+        icon: 'success',
+        title: 'MISSION DEPLOYED // TRANSMITTED',
+        text: `สร้างภารกิจใหม่ ${newId} เข้าสู่เครือข่ายอวกาศเรียบร้อย`,
+        showConfirmButton: false,
+        timer: 1600,
+        customClass: {
+          popup: 'border border-cyan-400 shadow-[0_0_20px_rgba(0,240,255,0.4)]'
+        }
+      });
+    }
+
+    // --- Hyperspace Scan Trigger ---
+    function triggerHyperspaceScan() {
+      playSfx('warp');
+      const icon = document.getElementById('warpIcon');
+      icon.classList.add('animate-spin');
+      
+      // Speed up starfield
+      warpSpeed = 15;
+      setTimeout(() => {
+        warpSpeed = 1;
+        icon.classList.remove('animate-spin');
+        document.getElementById('lastUpdated').innerText = new Date().toLocaleTimeString('th-TH');
+        playSfx('success');
+
+        Swal.fire({
+          background: '#070d1e',
+          color: '#00f0ff',
+          icon: 'info',
+          title: 'HYPERSPACE SCAN SUCCESSFUL',
+          text: 'ดึงข้อมูลสดจากทุกสถานีอวกาศในเครือข่ายสหพันธ์ 2400 เรียบร้อย',
+          showConfirmButton: false,
+          timer: 1500,
+          customClass: {
+            popup: 'border border-cyan-400 shadow-[0_0_20px_rgba(0,240,255,0.4)]'
+          }
+        });
+      }, 800);
+    }
+
+    // --- Export CSV ---
+    function exportQuantumCSV() {
+      const data = getFilteredData();
+      let csvContent = "\uFEFFMISSION_ID,SECTOR,KPI_TITLE,EPOCH_YEAR,TARGET,ACTUAL,UNIT,PROGRESS(%),STATUS\n";
+      data.forEach(d => {
+        const pct = Math.round((d.actual / d.target) * 100);
+        csvContent += `"${d.id}","${d.category}","${d.name.replace(/"/g, '""')}","${d.year}",${d.target},${d.actual},"${d.unit}",${pct}%,"${d.status}"\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `quantum_kpi_stardate_2400_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // --- Interactive Starfield & Nebula Canvas ---
+    const canvas = document.getElementById('spaceCanvas');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let warpSpeed = 1;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function initStars() {
+      stars = [];
+      const numStars = 150;
+      for (let i = 0; i < numStars; i++) {
+        stars.push({
+          x: Math.random() * canvas.width - canvas.width / 2,
+          y: Math.random() * canvas.height - canvas.height / 2,
+          z: Math.random() * canvas.width,
+          color: Math.random() > 0.8 ? '#00f0ff' : (Math.random() > 0.9 ? '#b026ff' : '#ffffff')
+        });
+      }
+    }
+
+    function drawSpace() {
+      ctx.fillStyle = '#030712';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Subtle background nebula glow
+      const grad = ctx.createRadialGradient(
+        canvas.width * 0.8, canvas.height * 0.2, 50,
+        canvas.width * 0.8, canvas.height * 0.2, canvas.width * 0.6
+      );
+      grad.addColorStop(0, 'rgba(0, 240, 255, 0.08)');
+      grad.addColorStop(0.5, 'rgba(176, 38, 255, 0.05)');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      stars.forEach(star => {
+        star.z -= 0.5 * warpSpeed;
+        if (star.z <= 0) {
+          star.z = canvas.width;
+          star.x = Math.random() * canvas.width - cx;
+          star.y = Math.random() * canvas.height - cy;
+        }
+
+        const k = 250 / star.z;
+        const px = star.x * k + cx;
+        const py = star.y * k + cy;
+
+        if (px >= 0 && px <= canvas.width && py >= 0 && py <= canvas.height) {
+          const size = (1 - star.z / canvas.width) * (warpSpeed > 1 ? 3 : 2);
+          ctx.beginPath();
+          ctx.arc(px, py, Math.max(size, 0.8), 0, Math.PI * 2);
+          ctx.fillStyle = star.color;
+          ctx.shadowBlur = warpSpeed > 1 ? 10 : 4;
+          ctx.shadowColor = star.color;
+          ctx.fill();
+        }
+      });
+
+      requestAnimationFrame(drawSpace);
+    }
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      initStars();
+    });
+
+    // Close modals on clicking backdrop
+    window.addEventListener('click', (e) => {
+      const updateModal = document.getElementById('updateModal');
+      const addModal = document.getElementById('addModal');
+      if (e.target === updateModal) closeModal();
+      if (e.target === addModal) closeAddModal();
+    });
+
+    // Initialize
+    window.onload = () => {
+      resizeCanvas();
+      initStars();
+      drawSpace();
+      lucide.createIcons();
+      updateView();
+    };
+  </script>
+</body>
+</html>
