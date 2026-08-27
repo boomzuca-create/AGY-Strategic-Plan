@@ -2134,11 +2134,21 @@ function renderKPIList() {
               `;
             }
 
+            const alignBadgesHtml = renderAlignmentBadgesHtml({
+              isMoph: kpi.isMoph || kpi.moph || (kpi.alignment && kpi.alignment.isMoph),
+              isInspect: kpi.isInspect || kpi.inspect || (kpi.alignment && kpi.alignment.isInspect),
+              cupCode: kpi.cupCode || kpi.cup || (kpi.alignment && kpi.alignment.cupCode),
+              isPao: kpi.isPao || kpi.pao || (kpi.alignment && kpi.alignment.isPao)
+            });
+
             return `
               <tr onclick="openKPIDetailModal('${kpi.id}')" style="cursor: pointer;">
                 <td class="col-kpi-id"><strong>${kpi.id}</strong></td>
                 <td class="col-kpi-name">
-                  <div>${kpi.name}</div>
+                  <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+                    <span style="font-weight: 700;">${kpi.name}</span>
+                    ${alignBadgesHtml}
+                  </div>
                   <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">${kpi.strategy} | ${kpi.objective || ''}</div>
                   ${subHtml}
                 </td>
@@ -7122,13 +7132,21 @@ function openKPIDetailModal(kpiId) {
 
   const overallStrokeColor = evalRes.status === 'pass' ? '#10b981' : (evalRes.status === 'fail' ? '#ef4444' : '#f59e0b');
 
+  const alignBadgesHtml = renderAlignmentBadgesHtml({
+    isMoph: kpi.isMoph || kpi.moph || (kpi.alignment && kpi.alignment.isMoph),
+    isInspect: kpi.isInspect || kpi.inspect || (kpi.alignment && kpi.alignment.isInspect),
+    cupCode: kpi.cupCode || kpi.cup || (kpi.alignment && kpi.alignment.cupCode),
+    isPao: kpi.isPao || kpi.pao || (kpi.alignment && kpi.alignment.isPao)
+  });
+
   dialog.innerHTML = `
     <!-- Header -->
     <div class="modal-insight-header">
       <div style="flex: 1; min-width: 0; padding-right: 0.75rem;">
-        <div class="modal-header-meta">
+        <div class="modal-header-meta" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
           <span class="badge-kpi-id">${kpi.id}</span>
           <span class="breadcrumb-strat">${kpi.strategy} &rsaquo; ${kpi.objective || ''}</span>
+          ${alignBadgesHtml}
         </div>
         <h2 class="modal-insight-title" title="${kpi.name}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;">${kpi.name}</h2>
       </div>
@@ -9031,6 +9049,90 @@ window.renderStrategicRadarChart = renderStrategicRadarChart;
 window.showAppToast = showAppToast;
 window.renderOverviewStats = renderOverviewStats;
 window.fallbackCopyText = fallbackCopyText;
+
+// ============================================================================
+// STRATEGIC ALIGNMENT BADGES RENDERER (กสธ. / ตรก. / CUP / อบจ.)
+// ============================================================================
+function renderAlignmentBadgesHtml(alignment = {}) {
+  const { isMoph, isInspect, cupCode, isPao, className = '' } = alignment;
+  const badges = [];
+
+  // 1. กสธ. (Landmark)
+  if (isMoph) {
+    badges.push(`
+      <span title="สอดคล้องแผนแม่บทกระทรวงสาธารณสุข 2570" class="align-badge align-badge-moph">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="22" x2="21" y2="22"></line>
+          <line x1="6" y1="18" x2="6" y2="11"></line>
+          <line x1="10" y1="18" x2="10" y2="11"></line>
+          <line x1="14" y1="18" x2="14" y2="11"></line>
+          <line x1="18" y1="18" x2="18" y2="11"></line>
+          <polygon points="12 2 20 7 4 7"></polygon>
+        </svg>
+        กสธ.
+      </span>
+    `);
+  }
+
+  // 2. ตรวจราชการ (ClipboardCheck)
+  if (isInspect) {
+    badges.push(`
+      <span title="สอดคล้องประเด็นตรวจราชการเขตสุขภาพ" class="align-badge align-badge-inspect">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          <path d="m9 14 2 2 4-4"></path>
+        </svg>
+        ตรก.
+      </span>
+    `);
+  }
+
+  // 3. CUP (Hospital)
+  if (cupCode) {
+    const label = String(cupCode).startsWith('K') ? `CUP: ${String(cupCode).split(' ')[0]}` : 'CUP';
+    badges.push(`
+      <span title="สอดคล้องเกณฑ์นิเทศระดับอำเภอ/CUP: ${cupCode}" class="align-badge align-badge-cup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 6v4"></path>
+          <path d="M14 14h-4"></path>
+          <path d="M14 18h-4"></path>
+          <path d="M14 8h-4"></path>
+          <path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2"></path>
+          <path d="M18 22V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v18"></path>
+        </svg>
+        ${label}
+      </span>
+    `);
+  }
+
+  // 4. อบจ. (Building)
+  if (isPao) {
+    badges.push(`
+      <span title="สอดคล้องภารกิจถ่ายโอน รพ.สต. สู่ อบจ." class="align-badge align-badge-pao">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+          <path d="M9 22v-4h6v4"></path>
+          <path d="M8 6h.01"></path>
+          <path d="M16 6h.01"></path>
+          <path d="M12 6h.01"></path>
+          <path d="M12 10h.01"></path>
+          <path d="M12 14h.01"></path>
+          <path d="M16 10h.01"></path>
+          <path d="M16 14h.01"></path>
+          <path d="M8 10h.01"></path>
+          <path d="M8 14h.01"></path>
+        </svg>
+        อบจ.
+      </span>
+    `);
+  }
+
+  if (badges.length === 0) return '';
+  return `<div class="alignment-badges-container ${className}">${badges.join('')}</div>`;
+}
+
+window.renderAlignmentBadgesHtml = renderAlignmentBadgesHtml;
 
 // ============================================================================
 // INITIALIZATION ON DOMContentLoaded
