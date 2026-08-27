@@ -1435,7 +1435,7 @@ function renderOverviewStats() {
     else if (res.status === 'fail') { failCount++; evaluated++; }
   });
 
-  const passRate = evaluated > 0 ? ((passCount / evaluated) * 100).toFixed(1) : '0.0';
+  const passRate = evaluated > 0 ? ((passCount / evaluated) * 100).toFixed(2) : '0.00';
 
   const elTotal = document.getElementById('stat-total-kpis');
   const elPassRate = document.getElementById('stat-pass-rate');
@@ -1547,7 +1547,7 @@ function renderConcentricDonutChart() {
       else if (res.status === 'fail') { fail++; evaluated++; totalFail++; }
     });
 
-    const rate = evaluated > 0 ? Math.round((pass / evaluated) * 100) : (kpis.length > 0 ? 0 : 100);
+    const rate = evaluated > 0 ? ((pass / evaluated) * 100).toFixed(2) : (kpis.length > 0 ? '0.00' : '100.00');
 
     return {
       num: s.num,
@@ -1579,7 +1579,7 @@ function renderConcentricDonutChart() {
   // Update left scorecard footer values
   const avgPctEl = document.getElementById('radar-avg-pct');
   if (avgPctEl) {
-    const avgVal = totalKPIs > 0 ? ((totalPass / totalKPIs) * 100).toFixed(1) : '0.0';
+    const avgVal = totalKPIs > 0 ? ((totalPass / totalKPIs) * 100).toFixed(2) : '0.00';
     avgPctEl.textContent = `${avgVal}%`;
   }
   const avgSubEl = document.getElementById('radar-avg-sub');
@@ -1722,11 +1722,12 @@ function renderStrategySummaryCards() {
       else { pending++; }
     });
 
-    const passRate = evaluated > 0 ? Math.round((pass / evaluated) * 100) : 0;
+    const passRateNum = evaluated > 0 ? (pass / evaluated) * 100 : 0;
+    const passRate = passRateNum.toFixed(2);
     const radius = 46;
     const strokeWidth = 9;
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (passRate / 100) * circumference;
+    const strokeDashoffset = circumference - (passRateNum / 100) * circumference;
 
     return `
       <div class="strategy-health-card bento-pillar-card" onclick="filterBySpecificStrategy('ยุทธศาสตร์ที่ ${s.num}')">
@@ -1881,11 +1882,12 @@ function renderPillarsTab() {
       else if (res.status === 'fail') { fail++; evaluated++; }
     });
 
-    const passRate = evaluated > 0 ? Math.round((pass / evaluated) * 100) : 0;
+    const passRateNum = evaluated > 0 ? (pass / evaluated) * 100 : 0;
+    const passRate = passRateNum.toFixed(2);
     const radius = 38;
     const strokeWidth = 8;
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (passRate / 100) * circumference;
+    const strokeDashoffset = circumference - (passRateNum / 100) * circumference;
 
     return `
       <div class="pillar-deep-card executive-pillar-card pillar-card-${p.num}" style="border: 1.5px solid ${theme.gradient[0]}; border-top: 4.5px solid ${theme.gradient[0]};" onclick="filterBySpecificStrategy('ยุทธศาสตร์ที่ ${p.num}')">
@@ -2363,7 +2365,7 @@ function renderExecutiveSummaryTab() {
       else if (res.status === 'fail') fail++;
     });
     const evaluated = pass + fail;
-    const rate = evaluated > 0 ? Math.round((pass / evaluated) * 100) : 0;
+    const rate = evaluated > 0 ? ((pass / evaluated) * 100).toFixed(2) : '0.00';
     return {
       num: p.num,
       name: p.name,
@@ -8805,7 +8807,7 @@ function renderStrategicRadarChart() {
   if (footTotal) footTotal.textContent = `${kpis.length} ตัวชี้วัด`;
 
   const avgPct = document.getElementById('radar-avg-pct');
-  if (avgPct) avgPct.textContent = `${overallAvg.toFixed(1)}%`;
+  if (avgPct) avgPct.textContent = `${overallAvg.toFixed(2)}%`;
 
   const avgSub = document.getElementById('radar-avg-sub');
   if (avgSub) avgSub.textContent = `(ผ่าน ${totalPass} / รวม ${kpis.length})`;
@@ -8840,7 +8842,7 @@ function renderStrategicRadarChart() {
       labels.push(`ยุทธศาสตร์ ${st.num}`);
       const evaluatedInSt = stKpis.filter(k => evaluateStatus(k).status === 'pass' || evaluateStatus(k).status === 'fail');
       const passCount = stKpis.filter(k => evaluateStatus(k).status === 'pass').length;
-      const rate = evaluatedInSt.length > 0 ? Math.round((passCount / evaluatedInSt.length) * 100) : 0;
+      const rate = evaluatedInSt.length > 0 ? parseFloat(((passCount / evaluatedInSt.length) * 100).toFixed(2)) : 0;
       passRates.push(rate);
     }
   });
@@ -9020,6 +9022,7 @@ window.draftProjectWithGemini = draftProjectWithGemini;
 window.renderConcentricDonutChart = renderConcentricDonutChart;
 window.renderStrategicRadarChart = renderStrategicRadarChart;
 window.showAppToast = showAppToast;
+window.renderOverviewStats = renderOverviewStats;
 window.fallbackCopyText = fallbackCopyText;
 
 // ============================================================================
