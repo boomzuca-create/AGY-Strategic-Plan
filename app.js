@@ -768,95 +768,692 @@ const OFFICIAL_DATASET = {
     ]
   },
 
-  "70": {
-    year: "70",
-    yearName: "2570",
+  '70': {
+    year: '2570',
+    yearName: '2570',
+    eraTitle: 'แผนยุทธศาสตร์สุขภาพ 2570 (22 ตัวชี้วัดสอดคล้องเชิงนโยบาย)',
     totalPillars: 5,
     pillars: [
-      { num: 1, name: "สร้างเสริมสุขภาพ ป้องกัน ควบคุมโรค ภัยสุขภาพ อนามัยสิ่งแวดล้อม และคุ้มครองผู้บริโภคด้านสุขภาพ และสนับสนุนให้เกิดการมีส่วนร่วมจากทุกภาคส่วน", shortName: "PP&P", shortCode: 'PP&P', icon: "🛡️", color: "#0ea5e9", expectedKpis: 17 },
-      { num: 2, name: "พัฒนาระบบบบริการสุขภาพให้มีคุณภาพ มีประสิทธิภาพ ประชาชนเข้าถึง ระบบบริการทุกระดับ ทั่วถึง ไร้รอยต่อ และเป็นธรรม", shortName: "Service Excellence", shortCode: "Service", icon: "🏥", color: "#10b981", expectedKpis: 13 },
-      { num: 3, name: "พัฒนาบุคลากรให้มีสมรรถนะมีความสุขในการทำงานและส่งเสริมการมีส่วนร่วม ทุกภาคส่วนใน การดูแลและจัดการระบบสุขภาพ", shortName: "People Excellence", shortCode: "People", icon: "👥", color: "#8b5cf6", expectedKpis: 2 },
-      { num: 4, name: "การพัฒนาองค์กรสาธารณสุขให้มีสมรรถนะสูง บริการด้วยความทันสมัยและธรรมาภิบาล", shortName: "Governance Excellence", shortCode: "Governance", icon: "⚖️", color: "#f59e0b", expectedKpis: 5 },
-      { num: 5, name: "ส่งเสริมการท่องเที่ยวเชิงสุขภาพความงาม และแพทย์แผนไทย", shortName: "Health & Wellness Tourism", shortCode: "Wellness", icon: "🌿", color: "#ec4899", expectedKpis: 1 }
+      { num: 1, name: "ส่งเสริมสุขภาพ ป้องกัน ควบคุมโรค ภัยสุขภาพ อนามัยสิ่งแวดล้อม และคุ้มครองผู้บริโภค", shortName: "PP&P Excellence", shortCode: "PP&P", icon: "🛡️", color: "#0284c7", expectedKpis: 6 },
+      { num: 2, name: "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ประสิทธิภาพ ครอบคลุม ไร้รอยต่อ", shortName: "Service Excellence", shortCode: "Service", icon: "🏥", color: "#0d9488", expectedKpis: 10 },
+      { num: 3, name: "พัฒนาบุคลากรให้มีสมรรถนะสูง มีความสุขในการทำงาน และมีคุณธรรม", shortName: "People Excellence", shortCode: "People", icon: "👥", color: "#8b5cf6", expectedKpis: 1 },
+      { num: 4, name: "การพัฒนาองค์กรสาธารณสุขให้มีสมรรถนะสูง นวัตกรรมดิจิทัล และธรรมาภิบาล", shortName: "Governance Excellence", shortCode: "Governance", icon: "🏛️", color: "#f59e0b", expectedKpis: 4 },
+      { num: 5, name: "ส่งเสริมการท่องเที่ยวเชิงสุขภาพความงาม และเศรษฐกิจสุขภาพ", shortName: "Health Economy", shortCode: "Wellness", icon: "🌿", color: "#ec4899", expectedKpis: 1 }
     ],
     kpis: [
-      // ยุทธศาสตร์ที่ 1 (17)
-      { id: "KPI70-01", order: 1, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 1", name: "ร้อยละของประชาชนวัยทำงานอายุ 19-59 ปี มี BMI เกินได้รับการปรับเปลี่ยนพฤติกรรมและมี BMI ลดลง", unit: "ร้อยละ", direction: "ยิ่งน้อยยิ่งดี", baseline: "46.74", target: "< 38", actual: null },
-      { id: "KPI70-02", order: 2, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 1", name: "ระดับคะแนนความสำเร็จของอำเภอในการดำเนินงานความรอบรู้ด้านสุขภาพในการป้องกันโรค Stroke, Pneumonia และภาวะติดเชื้อในกระแสเลือด", unit: "คะแนน", direction: "ยิ่งมากยิ่งดี", baseline: "82.06", target: "88", actual: null },
-      { id: "KPI70-03", order: 3, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "จำนวนอำเภอที่ผ่านเกณฑ์คุณภาพการพัฒนาคุณภาพชีวิตระดับอำเภอ Plus (พชอ. Plus)", unit: "อำเภอ", direction: "ยิ่งมากยิ่งดี", baseline: "26", target: "26", actual: null },
-      { id: "KPI70-04", order: 4, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "ร้อยละเด็กปฐมวัยมีพัฒนาการสมวัย", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "69.50", target: "90", actual: null },
-      { id: "KPI70-05", order: 5, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "ร้อยละเด็ก 0-5 ปี มีส่วนสูงดีรูปร่างสมส่วน", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "65.49", target: "80", actual: null },
-      { id: "KPI70-06", order: 6, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "ร้อยละเด็ก 6-14 ปี มีส่วนสูงดีรูปร่างสมส่วน", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "59.77", target: "≥ 65", actual: null },
-      { id: "KPI70-07", order: 7, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "ผู้สูงอายุและผู้ที่มีภาวะพึ่งพิงได้รับการดูแลในระบบ Long Term Care และเข้าถึงตามชุดสิทธิประโยชน์", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "99.29", target: "99.5", actual: null },
-      { id: "KPI70-08", order: 8, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "อัตราตายมารดา", unit: "ต่อแสนการเกิดมีชีพ", direction: "ยิ่งน้อยยิ่งดี", baseline: "11.14", target: "≤12", actual: null },
-      { id: "KPI70-09", order: 9, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "อัตราตายของทารกแรกเกิด", unit: "ต่อพันการเกิดมีชีพ", direction: "ยิ่งน้อยยิ่งดี", baseline: "3.28", target: "< 2.0", actual: null },
-      { id: "KPI70-10", order: 10, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "ร้อยละของผู้สูงอายุไม่มีภาวะพึ่งพิง", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "95.32", target: "96.5", actual: null },
-      { id: "KPI70-11", order: 11, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "ร้อยละสตรีอายุ 30-60 ปี กลุ่มเป้าหมายได้รับการคัดกรองมะเร็งปากมดลูกด้วยวิธี HPV DNA (สะสมผลงาน 2568-2570 ≥ 80%)", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "11.26", target: "≥ 80", actual: null },
-      { id: "KPI70-12", order: 12, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "ร้อยละของประชาชนอายุ 50-70 ปี (รายใหม่) กลุ่มเป้าหมายได้รับการคัดกรองมะเร็ง ลำไส้ใหญ่/ไส้ตรง ด้วยวิธี FIT Test", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "74.37", target: "85", actual: null },
-      { id: "KPI70-13", order: 13, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "ร้อยละของผู้ที่มีผลผิดปกติ (มะเร็งลำไส้ใหญ่และไส้ตรงผิดปกติ) ได้รับการส่องกล้อง Colonoscopy", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "64.57", target: "95", actual: null },
-      { id: "KPI70-14", order: 14, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "อัตราความครอบคลุมของการค้นหาผู้ป่วยวัณโรคในกลุ่มผู้สัมผัสร่วมบ้านและผู้สัมผัสใกล้ชิด", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "100", target: "100", actual: null },
       {
-        id: "KPI70-15", order: 15, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2",
-        name: "อัตราป่วยโรคเบาหวานและโรคความดันโลหิตสูงรายใหม่ ลดลง",
-        unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี",
-        subValues: [
-          { label: "15.1 อัตราป่วยโรคเบาหวานรายใหม่ ลดลง", baseline: "7.99", target: "8", actual: null },
-          { label: "15.2 อัตราป่วยโรคความดันโลหิตสูงรายใหม่ ลดลง", baseline: "-0.11", target: "2", actual: null }
-        ],
-        target: "8 / 2", actual: null
+            "id": "KPI70-01",
+            "order": 1,
+            "strategyNum": 1,
+            "strategy": "ยุทธศาสตร์ที่ 1",
+            "strategy_name": "PP&P Excellence (การส่งเสริมสุขภาพ ป้องกันโรค และคุ้มครองผู้บริโภค)",
+            "objective": "สร้างเสริมสุขภาพ ป้องกัน ควบคุมโรค และภัยสุขภาพ",
+            "name": "อัตราส่วนการตายมารดาไทย (Maternal Mortality Ratio)",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "คงตัวชี้วัดเดิมของแผนจังหวัดต่อในปี 2570",
+            "is_moph": true,
+            "moph_ref": "Master-01",
+            "is_inspect": true,
+            "inspect_no": "01 อัตรามารดาตายไทย",
+            "is_cup": false,
+            "cup_code": null,
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  2,
+                  3
+            ],
+            "kpi_code": "KPI70-01"
       },
-      { id: "KPI70-16", order: 16, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 2", name: "ร้อยละของเด็กอายุ 12 ปี ฟันดีไม่มีผุ (Cavity free)", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "76.90", target: "88", actual: null },
       {
-        id: "KPI70-17", order: 17, strategyNum: 1, strategy: "ยุทธศาสตร์ที่ 1", objective: "เป้าประสงค์ที่ 3",
-        name: "จำนวนโรงพยาบาลที่ยกระดับการพัฒนาอนามัยสิ่งแวดล้อมได้ตามเกณฑ์ GREEN & CLEAN Hospital",
-        unit: "แห่ง", direction: "ยิ่งมากยิ่งดี",
-        subValues: [
-          { label: "ระดับมาตรฐาน (Standard)", baseline: "0", target: "0", actual: null },
-          { label: "ระดับดีเยี่ยม (Excellent)", baseline: "18", target: "16", actual: null },
-          { label: "ระดับท้าทาย (Challenge)", baseline: "8", target: "10", actual: null }
-        ],
-        target: "0 / 16 / 10", actual: null
+            "id": "KPI70-02",
+            "order": 2,
+            "strategyNum": 1,
+            "strategy": "ยุทธศาสตร์ที่ 1",
+            "strategy_name": "PP&P Excellence (การส่งเสริมสุขภาพ ป้องกันโรค และคุ้มครองผู้บริโภค)",
+            "objective": "สร้างเสริมสุขภาพ ป้องกัน ควบคุมโรค และภัยสุขภาพ",
+            "name": "ร้อยละการตรวจติดตามยืนยันวินิจฉัยกลุ่มสงสัยป่วยโรคเบาหวาน ��ละ/หรือความดันโลหิตสูง",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "ควรเพิ่มเป็นตัวชี้วัดใหม่ในแผน 2570 หรือขยายนิยาม K111 เดิมให้ครอบคลุม",
+            "is_moph": true,
+            "moph_ref": "Master-02",
+            "is_inspect": false,
+            "inspect_no": null,
+            "is_cup": true,
+            "cup_code": "K111",
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/ปฐมภูมิ",
+            "policy_sources": [
+                  1,
+                  2,
+                  3,
+                  5
+            ],
+            "kpi_code": "KPI70-02"
       },
-
-      // ยุทธศาสตร์ที่ 2 (13)
-      { id: "KPI70-18", order: 18, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "อัตราความสำเร็จของการรักษาวัณโรคปอดรายใหม่", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "74.59", target: "95", actual: null },
-      { id: "KPI70-19", order: 19, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "ร้อยละประชาชนกลุ่มเป้าหมายเป็นโรคพยาธิใบไม้ตับลดลง", unit: "ร้อยละ", direction: "ยิ่งน้อยยิ่งดี", baseline: "3.64", target: "≤ 0.8", actual: null },
-      { id: "KPI70-20", order: 20, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "อัตราการฆ่าตัวตายสำเร็จ", unit: "ต่อแสนประชากร", direction: "ยิ่งน้อยยิ่งดี", baseline: "7.21", target: "≤ 7.5", actual: null },
-      { id: "KPI70-21", order: 21, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "อัตราตายผู้ป่วยติดเชื้อในกระแสเลือดแบบรุนแรงชนิด (Community-Acquired)", unit: "ร้อยละ", direction: "ยิ่งน้อยยิ่งดี", baseline: "23.14", target: "< 23", actual: null },
-      { id: "KPI70-22", order: 22, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "อัตราผู้ป่วยโรคหลอดเลือดสมอง รายใหม่ต่อประชากรแสนคน", unit: "ต่อแสนประชากร", direction: "ยิ่งน้อยยิ่งดี", baseline: "288.57", target: "235", actual: null },
-      { id: "KPI70-23", order: 23, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "ร้อยละของผู้ป่วย IMC ได้รับการบริบาลฟื้นสภาพและติดตามจนครบ 6 เดือน หรือจน Barthel index = 20 ก่อนครบ 6 เดือน", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "95.23", target: "99", actual: null },
-      { id: "KPI70-24", order: 24, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "อัตราการติดเชื้อดื้อยาในกระแสเลือดลดลง", unit: "อัตรา", direction: "ยิ่งน้อยยิ่งดี", baseline: "≤ ปีที่ผ่านมา", target: "≤ ปีที่ผ่านมา", actual: null },
-      { id: "KPI70-25", order: 25, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "ร้อยละของผู้ป่วยที่มีการวินิจฉัยโรคหลอดเลือดสมอง อัมพฤกษ์ อัมพาต ระยะกลาง (Intermediate Care) ที่ได้รับการดูแลด้วยการแพทย์แผนไทยและการแพทย์ทางเลือก", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "8.17", target: "≥24", actual: null },
-      { id: "KPI70-26", order: 26, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "ร้อยละผู้ป่วยนอกที่ได้รับบริการ ตรวจ วินิจฉัย รักษาโรค และฟื้นฟูสภาพ ด้วยศาสตร์การแพทย์แผนไทยและการแพทย์ทางเลือก", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "21.19", target: "≥24", actual: null },
-      { id: "KPI70-27", order: 27, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "ร้อยละของผู้ป่วยเบาหวานควบคุมน้ำตาลได้", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "30.01", target: "45", actual: null },
-      { id: "KPI70-28", order: 28, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 4", name: "ร้อยละของผู้ป่วยความดันโลหิตสูงควบคุมความดันโลหิตได้", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "58.96", target: "65", actual: null },
-      { id: "KPI70-29", order: 29, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 5", name: "ร้อยละการจัดตั้งหน่วยบริการปฐมภูมิและเครือข่ายหน่วยบริการปฐมภูมิตามพระราชบัญญัติระบบสุขภาพปฐมภูมิ พ.ศ. 2562", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "100", target: "100", actual: null },
-      { id: "KPI70-30", order: 30, strategyNum: 2, strategy: "ยุทธศาสตร์ที่ 2", objective: "เป้าประสงค์ที่ 5", name: "ร้อยละของการให้บริการผู้ป่วยนอกด้วยระบบด้วยระบบการแพทย์ทางไกล (Telemedicine) ในหน่วยบริการปฐมภูมิ", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "-", target: "30", actual: null },
-
-      // ยุทธศาสตร์ที่ 3 (2)
-      { id: "KPI70-31", order: 31, strategyNum: 3, strategy: "ยุทธศาสตร์ที่ 3", objective: "เป้าประสงค์ที่ 6", name: "บุคลากรที่ปฏิบัติงานในสำนักงานสาธารณสุขอำเภอได้รับการพัฒนาสมรรถนะหลักและสมรรถนะรอง (Regulator/ กฎหมาย/ พรบ.การสาธารณสุข พ.ศ. 2535/ Hard skill/ Soft skill/ AI)", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "87.69", target: "95", actual: null },
-      { id: "KPI70-32", order: 32, strategyNum: 3, strategy: "ยุทธศาสตร์ที่ 3", objective: "เป้าประสงค์ที่ 6", name: "บุคลากรที่ปฏิบัติงานในระดับเครือข่ายบริการสุขภาพได้รับการพัฒนาสมรรถนะหลักและสมรรถนะรอง", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "-", target: "85", actual: null },
-
-      // ยุทธศาสตร์ที่ 4 (5)
-      { id: "KPI70-33", order: 33, strategyNum: 4, strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 7", name: "ผลงานวิจัย/R2R/นวัตกรรมหรือเทคโนโลยีสุขภาพที่คิดค้นใหม่หรือที่พัฒนาต่อยอดนำไปแก้ไขปัญหาสาธารณสุขที่สำคัญของจังหวัดขอนแก่น", unit: "เรื่อง", direction: "ยิ่งมากยิ่งดี", baseline: "448 (เรื่อง)", target: "วิจัย 450 / นวัตกรรม 120", actual: null },
-      { id: "KPI70-34", order: 34, strategyNum: 4, strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 7", name: "จำนวนโรงพยาบาลสังกัดกระทรวงสาธารณสุขที่พัฒนาสู่องค์กรดิจิทัลและมีความมั่นคงปลอดภัยทางไซเบอร์", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", baseline: "22 แห่ง", target: "26 แห่ง", actual: null },
       {
-        id: "KPI70-35", order: 35, strategyNum: 4, strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 8",
-        name: "โรงพยาบาลสังกัดกระทรวงสาธารณสุขมีคุณภาพผ่านการรับรองตามมาตรฐาน",
-        unit: "แห่ง", direction: "ยิ่งมากยิ่งดี",
-        subValues: [
-          { label: "รพศ./ รพท.", baseline: "3", target: "3", actual: null },
-          { label: "รพช.", baseline: "18", target: "19", actual: null },
-          { label: "รพ. ระดับ F3 (ตามเกณฑ์ที่กำหนด)", baseline: "4", target: "4", actual: null }
-        ],
-        target: "26 แห่ง", actual: null
+            "id": "KPI70-03",
+            "order": 3,
+            "strategyNum": 1,
+            "strategy": "ยุทธศาสตร์ที่ 1",
+            "strategy_name": "PP&P Excellence (การส่งเสริมสุขภาพ ป้องกันโรค และคุ้มครองผู้บริโภค)",
+            "objective": "สร้างเสริมสุขภาพ ป้องกัน ควบคุมโรค และภัยสุขภาพ",
+            "name": "ร้อยละความครอบคลุมของวัคซีนป้องกันหัด-คางทูม-หัดเยอรมัน เข็มที่ 2 (MMR2) ในเด็กอายุครบ 2 ปี ระดับจังหวัด",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "ควรปรับ K108 ให้ระบุ MMR2 เข็ม 2 อายุครบ 2 ปีชัดเจนตามนิยามกระทรวง",
+            "is_moph": true,
+            "moph_ref": "Master-03",
+            "is_inspect": true,
+            "inspect_no": "09 MMR",
+            "is_cup": true,
+            "cup_code": "K108 (วัคซีนพื้นฐานเด็ก 0-5 ปี)",
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/ปฐมภูมิ",
+            "policy_sources": [
+                  1,
+                  2,
+                  3
+            ],
+            "kpi_code": "KPI70-03"
       },
-      { id: "KPI70-36", order: 36, strategyNum: 4, strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 8", name: "จำนวนสำนักงานสาธารณสุขอำเภอผ่านเกณฑ์พัฒนาศักยภาพเป็นองค์กรสมรรถนะสูง Smart สสอ.ด้านการคุ้มครองผู้บริโภค", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", baseline: "9", target: "20", actual: null },
-      { id: "KPI70-37", order: 37, strategyNum: 4, strategy: "ยุทธศาสตร์ที่ 4", objective: "เป้าประสงค์ที่ 9", name: "จำนวนโรงพยาบาลมีการบริหารการเงินการคลังอย่างมีประสิทธิภาพ", unit: "แห่ง", direction: "ยิ่งมากยิ่งดี", baseline: "21 แห่ง", target: "26 แห่ง", actual: null },
-
-      // ยุทธศาสตร์ที่ 5 (1)
-      { id: "KPI70-38", order: 38, strategyNum: 5, strategy: "ยุทธศาสตร์ที่ 5", objective: "เป้าประสงค์ที่ 10", name: "ร้อยละผลิตภัณฑ์สุขภาพและสถานประกอบการมีคุณภาพตามเกณฑ์", unit: "ร้อยละ", direction: "ยิ่งมากยิ่งดี", baseline: "100", target: "> 95", actual: null }
-    ]
+      {
+            "id": "KPI70-04",
+            "order": 4,
+            "strategyNum": 2,
+            "strategy": "ยุทธศาสตร์ที่ 2",
+            "strategy_name": "Service Excellence (การพัฒนาระบบบริการทางการแพทย์)",
+            "objective": "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ครอบคลุม และไร้รอยต่อ",
+            "name": "อัตราป่วยตาย sepsis community-acquired",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "คงตัวชี้วัดเดิมของแผนจังหวัดต่อในปี 2570",
+            "is_moph": true,
+            "moph_ref": "Master-04",
+            "is_inspect": true,
+            "inspect_no": "12 Community-acquired sepsis",
+            "is_cup": true,
+            "cup_code": "K208",
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  3
+            ],
+            "kpi_code": "KPI70-04"
+      },
+      {
+            "id": "KPI70-05",
+            "order": 5,
+            "strategyNum": 2,
+            "strategy": "ยุทธศาสตร์ที่ 2",
+            "strategy_name": "Service Excellence (การพัฒนาระบบบริการทางการแพทย์)",
+            "objective": "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ครอบคลุม และไร้รอยต่อ",
+            "name": "อัตราผู้สูงอายุเข้ารับการรักษาในโรงพยาบาลจากการพลัดตกหกล้มลดลง",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "ตัวชี้วัดใหม่จากกระทรวง ต้องเพิ่มใน���ผนจังหวัด 2570 และออกแบบระบบเก็บข้อมูล",
+            "is_moph": true,
+            "moph_ref": "Master-05",
+            "is_inspect": false,
+            "inspect_no": null,
+            "is_cup": false,
+            "cup_code": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/ชุมชน",
+            "policy_sources": [],
+            "kpi_code": "KPI70-05"
+      },
+      {
+            "id": "KPI70-06",
+            "order": 6,
+            "strategyNum": 3,
+            "strategy": "ยุทธศาสตร์ที่ 3",
+            "strategy_name": "People Excellence (การพัฒนาบุคลากรและกำลังคนด้านสุขภาพ)",
+            "objective": "พัฒนาศักยภาพและการกระจายตัวของกำลังคนด้านสาธารณสุข",
+            "name": "สัดส่วนการกระจายแพทย์ในโรงพยาบาลชุมชน (รพช.) สังกัด สป.สธ.",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "ตัวชี้วัดใหม่จากกระทรวง ด้านกำลังคน ต้องเพิ่มในแผนจังหวัด 2570",
+            "is_moph": true,
+            "moph_ref": "Master-06",
+            "is_inspect": true,
+            "inspect_no": "24 การกระจายแพทย์ใน รพช.",
+            "is_cup": false,
+            "cup_code": null,
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  2,
+                  3
+            ],
+            "kpi_code": "KPI70-06"
+      },
+      {
+            "id": "KPI70-07",
+            "order": 7,
+            "strategyNum": 1,
+            "strategy": "ยุทธศาสตร์ที่ 1",
+            "strategy_name": "PP&P Excellence (การส่งเสริมสุขภาพ ป้องกันโรค และคุ้มครองผู้บริโภค)",
+            "objective": "สร้างเสริมสุขภาพ ป้องกัน ควบคุมโรค และภัยสุขภาพ",
+            "name": "อัตราความรอบรู้ด้านสุขภาพของประชาชนไทย อายุ 15 ปีขึ้นไป",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "แผนเดิมเฉพาะกลุ่มโรค ตัวใหม่กว้างกว่า ควรพิจารณาเพิ่มควบคู่กับของเดิม",
+            "is_moph": true,
+            "moph_ref": "Master-07",
+            "is_inspect": true,
+            "inspect_no": "06 HL สุขภาพ",
+            "is_cup": true,
+            "cup_code": "K110",
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  4
+            ],
+            "kpi_code": "KPI70-07"
+      },
+      {
+            "id": "KPI70-08",
+            "order": 8,
+            "strategyNum": 1,
+            "strategy": "ยุทธศาสตร์ที่ 1",
+            "strategy_name": "PP&P Excellence (การส่งเสริมสุขภาพ ป้องกันโรค และคุ้มครองผู้บริโภค)",
+            "objective": "สร้างเสริมสุขภาพ ป้องกัน ควบคุมโรค และภัยสุขภาพ",
+            "name": "ร้อยละของเด็ก อายุ 0-5 ปี มีพัฒนาการสมวัย",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "คงตัวชี้วัดเดิมของแผนจังหวัดต่อในปี 2570",
+            "is_moph": true,
+            "moph_ref": "Master-08",
+            "is_inspect": true,
+            "inspect_no": "02 เด็ก 0-5 ปี พัฒนาการสมวัย",
+            "is_cup": true,
+            "cup_code": "K103",
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/ปฐมภูมิ",
+            "policy_sources": [
+                  3,
+                  4,
+                  5
+            ],
+            "kpi_code": "KPI70-08"
+      },
+      {
+            "id": "KPI70-09",
+            "order": 9,
+            "strategyNum": 1,
+            "strategy": "ยุทธศาสตร์ที่ 1",
+            "strategy_name": "PP&P Excellence (การส่งเสริมสุขภาพ ป้องกันโรค และคุ้มครองผู้บริโภค)",
+            "objective": "สร้างเสริมสุขภาพ ป้องกัน ควบคุมโรค และภัยสุขภาพ",
+            "name": "อัตราการเสียชีวิตและบาดเจ็บจากอุบัติเหตุทางถนนในกลุ่มเด็กและเยาวชนลดลง",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "มีอยู่แล้วในตัวชี้วัดนิเทศ CUP ควรบรรจุเข้าแผนยุทธศาสตร์จังหวัด 2570 อย่างเป็นทางการ",
+            "is_moph": true,
+            "moph_ref": "Master-09",
+            "is_inspect": true,
+            "inspect_no": "08 RTI",
+            "is_cup": true,
+            "cup_code": "K115",
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  2,
+                  3,
+                  4
+            ],
+            "kpi_code": "KPI70-09"
+      },
+      {
+            "id": "KPI70-10",
+            "order": 10,
+            "strategyNum": 2,
+            "strategy": "ยุทธศาสตร์ที่ 2",
+            "strategy_name": "Service Excellence (การพัฒนาระบบบริการทางการแพทย์)",
+            "objective": "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ครอบคลุม และไร้รอยต่อ",
+            "name": "ร้อยละผู้ป่วยมะเร็งได้รับการรักษาภายในระยะเวลาที่กำหนด",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "ตัวชี้วัดใหม่ด้านมะเร็ง ต้องเพิ่มในแผนจังหวัด 2570",
+            "is_moph": true,
+            "moph_ref": "Master-10",
+            "is_inspect": true,
+            "inspect_no": "20 Cancer",
+            "is_cup": false,
+            "cup_code": null,
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  2,
+                  3
+            ],
+            "kpi_code": "KPI70-10"
+      },
+      {
+            "id": "KPI70-11",
+            "order": 11,
+            "strategyNum": 2,
+            "strategy": "ยุทธศาสตร์ที่ 2",
+            "strategy_name": "Service Excellence (การพัฒนาระบบบริการทางการแพทย์)",
+            "objective": "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ครอบคลุม และไร้รอยต่อ",
+            "name": "อัตราตายทารกแรกเกิด",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "คงตัวชี้วัดเดิมของแผนจังหวัดต่อในปี 2570",
+            "is_moph": true,
+            "moph_ref": "Master-11",
+            "is_inspect": true,
+            "inspect_no": "16 อัตราตายทารกแรกเกิด",
+            "is_cup": true,
+            "cup_code": "K102 (คุณภาพดูแลทารกแรกเกิด - ใกล้เคียง)",
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  2,
+                  3
+            ],
+            "kpi_code": "KPI70-11"
+      },
+      {
+            "id": "KPI70-12",
+            "order": 12,
+            "strategyNum": 2,
+            "strategy": "ยุทธศาสตร์ที่ 2",
+            "strategy_name": "Service Excellence (การพัฒนาระบบบริการทางการแพทย์)",
+            "objective": "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ครอบคลุม และไร้รอยต่อ",
+            "name": "อัตราตาย Stroke (I60-I64)",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "แผนเดิมวัดรายใหม่ ตัวร่างปี 70 วัดอัตราตาย (I60-I64) ควรปรับให้ตรงกับกระทรวง",
+            "is_moph": true,
+            "moph_ref": "Master-12",
+            "is_inspect": true,
+            "inspect_no": "14 STROKE",
+            "is_cup": false,
+            "cup_code": null,
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+            ],
+            "kpi_code": "KPI70-12"
+      },
+      {
+            "id": "KPI70-13",
+            "order": 13,
+            "strategyNum": 2,
+            "strategy": "ยุทธศาสตร์ที่ 2",
+            "strategy_name": "Service Excellence (การพัฒนาระบบบริการทางการแพทย์)",
+            "objective": "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ครอบคลุม และไร้รอยต่อ",
+            "name": "อัตราตาย STEMI",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "ตัวชี้วัดใหม่ด้านโรคหัวใ��� ต้องเพิ่มในแผนจังหวัด 2570",
+            "is_moph": true,
+            "moph_ref": "Master-13",
+            "is_inspect": true,
+            "inspect_no": "15 STEMI",
+            "is_cup": false,
+            "cup_code": null,
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  2,
+                  3,
+                  4
+            ],
+            "kpi_code": "KPI70-13"
+      },
+      {
+            "id": "KPI70-14",
+            "order": 14,
+            "strategyNum": 2,
+            "strategy": "ยุทธศาสตร์ที่ 2",
+            "strategy_name": "Service Excellence (การพัฒนาระบบบริการทางการแพทย์)",
+            "objective": "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ครอบคลุม และไร้รอยต่อ",
+            "name": "อัตราการฆ่าตัวตายสำเร็จ",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "คงตัวชี้วัดเดิมของแผนจังหวัดต่อในปี 2570",
+            "is_moph": true,
+            "moph_ref": "Master-14",
+            "is_inspect": true,
+            "inspect_no": "22 อัตราฆ่าตัวตายสำเร็จ",
+            "is_cup": true,
+            "cup_code": "K201 (ใกล้เคียง)",
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  2,
+                  3,
+                  4
+            ],
+            "kpi_code": "KPI70-14"
+      },
+      {
+            "id": "KPI70-15",
+            "order": 15,
+            "strategyNum": 2,
+            "strategy": "ยุทธศาสตร์ที่ 2",
+            "strategy_name": "Service Excellence (การพัฒนาระบบบริการทางการแพทย์)",
+            "objective": "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ครอบคลุม และไร้รอยต่อ",
+            "name": "อัตราการรักษา TB รายใหม่สำเร็จ",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "คงตัวชี้วัดเดิมของแผนจังหวัดต่อในปี 2570",
+            "is_moph": true,
+            "moph_ref": "Master-15",
+            "is_inspect": true,
+            "inspect_no": "13 ค้นหาและรักษาวัณโรค",
+            "is_cup": true,
+            "cup_code": "K205 (รวมกับลำดับ14)",
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  2,
+                  3,
+                  4
+            ],
+            "kpi_code": "KPI70-15"
+      },
+      {
+            "id": "KPI70-16",
+            "order": 16,
+            "strategyNum": 2,
+            "strategy": "ยุทธศาสตร์ที่ 2",
+            "strategy_name": "Service Excellence (การพัฒนาระบบบริการทางการแพทย์)",
+            "objective": "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ครอบคลุม และไร้รอยต่อ",
+            "name": "ร้อยละของผู้ป่วยวิกฤตเข้าถึงบริการการแพทย์ฉุกเฉิน",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "ตัวชี้วัดใหม่จากกระทรวง ด้านการแพทย์ฉุกเฉิน ต้องเพิ่มในแผนจังหวัด 2570",
+            "is_moph": true,
+            "moph_ref": "Master-16",
+            "is_inspect": false,
+            "inspect_no": null,
+            "is_cup": false,
+            "cup_code": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/ปฐมภูมิ",
+            "policy_sources": [
+                  1,
+                  2,
+                  3,
+                  4
+            ],
+            "kpi_code": "KPI70-16"
+      },
+      {
+            "id": "KPI70-17",
+            "order": 17,
+            "strategyNum": 2,
+            "strategy": "ยุทธศาสตร์ที่ 2",
+            "strategy_name": "Service Excellence (การพัฒนาระบบบริการทางการแพทย์)",
+            "objective": "พัฒนาระบบบริการสุขภาพให้มีคุณภาพ ครอบคลุม และไร้รอยต่อ",
+            "name": "CKD Stage 5 (อัตราการลดลงของ eGFR)",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "มีอยู่แล้วในตัวชี้วัดนิเทศ CUP ควรบรรจุเข้าแผนยุทธศาสตร์จังหวัด 2570 อย่างเป็นทางการ",
+            "is_moph": true,
+            "moph_ref": "Master-17",
+            "is_inspect": true,
+            "inspect_no": "11 CKD Stage 5",
+            "is_cup": true,
+            "cup_code": "K207",
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  1,
+                  2,
+                  3
+            ],
+            "kpi_code": "KPI70-17"
+      },
+      {
+            "id": "KPI70-18",
+            "order": 18,
+            "strategyNum": 4,
+            "strategy": "ยุทธศาสตร์ที่ 4",
+            "strategy_name": "Governance Excellence (การบริหารจัดการด้วยหลักธรรมาภิบาล)",
+            "objective": "พัฒนาระบบบริหารจัดการ ธรรมาภิบาล และความมั่นคงทางการคลัง",
+            "name": "ร้อยล��ของโรงพยาบาลสังกัดกระทรวงสาธารณสุขมีคุณภาพผ่านการรับรองตามมาตรฐาน",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "คงตัวชี้วัดเดิมของแผนจังหวัดต่อในปี 2570",
+            "is_moph": true,
+            "moph_ref": "Master-18",
+            "is_inspect": false,
+            "inspect_no": null,
+            "is_cup": true,
+            "cup_code": "K402",
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  3,
+                  4
+            ],
+            "kpi_code": "KPI70-18"
+      },
+      {
+            "id": "KPI70-19",
+            "order": 19,
+            "strategyNum": 4,
+            "strategy": "ยุทธศาสตร์ที่ 4",
+            "strategy_name": "Governance Excellence (การบริหารจัดการด้วยหลักธรรมาภิบาล)",
+            "objective": "พัฒนาระบบบริหารจัดการ ธรรมาภิบาล และความมั่นคงทางการคลัง",
+            "name": "ร้อยละของโรงพยาบาลในเขตสุขภาพผ่านเกณฑ์พัฒนา รพ.ที่มีการตรวจทางห้องปฏิบัติการอย่างสมเหตุผล (RLU)",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "ตัวชี้วัดใหม่จากกระทรวง ด้านธรรมาภิบาล ต้องเพิ่มในแผนจังหวัด 2570",
+            "is_moph": true,
+            "moph_ref": "Master-19",
+            "is_inspect": true,
+            "inspect_no": "26 RLU Plus",
+            "is_cup": false,
+            "cup_code": null,
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [],
+            "kpi_code": "KPI70-19"
+      },
+      {
+            "id": "KPI70-20",
+            "order": 20,
+            "strategyNum": 4,
+            "strategy": "ยุทธศาสตร์ที่ 4",
+            "strategy_name": "Governance Excellence (การบริหารจัดการด้วยหลักธรรมาภิบาล)",
+            "objective": "พัฒนาระบบบริหารจัดการ ธรรมาภิบาล และความมั่นคงทางการคลัง",
+            "name": "ประชาชนสามารถเข้าถึงสิทธิในระบบหลักประกันสุขภาพถ้วนหน้า (UHC)",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "แผนเดิมไม่มีนิยามนี้โดยตรง ควรขยายจาก K501 หรือเพิ่มตัวชี้วัดใหม่",
+            "is_moph": true,
+            "moph_ref": "Master-20",
+            "is_inspect": false,
+            "inspect_no": null,
+            "is_cup": true,
+            "cup_code": "K501 (ใกล้เคียง)",
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/ปฐมภูมิ",
+            "policy_sources": [
+                  2,
+                  3,
+                  4
+            ],
+            "kpi_code": "KPI70-20"
+      },
+      {
+            "id": "KPI70-21",
+            "order": 21,
+            "strategyNum": 4,
+            "strategy": "ยุทธศาสตร์ที่ 4",
+            "strategy_name": "Governance Excellence (การบริหารจัดการด้วยหลักธรรมาภิบาล)",
+            "objective": "พัฒนาระบบบริหารจัดการ ธรรมาภิบาล และความมั่นคงทางการคลัง",
+            "name": "สุขภาพทางการเงิน (EBITDA และเงินบำรุงสุทธิหลังหักค่าใช้จ่าย) — เสนอเปลี่ยนจาก TPS",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "แผนเดิมและตรวจราชการใช้ TPS (27) ปี 70 เสนอเปลี่ยนเป็น EBITDA",
+            "is_moph": true,
+            "moph_ref": "Master-21",
+            "is_inspect": true,
+            "inspect_no": "27 TPS - ตัวเดิมที่เสนอปรับเป็น EBITDA",
+            "is_cup": true,
+            "cup_code": "K403",
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [],
+            "kpi_code": "KPI70-21"
+      },
+      {
+            "id": "KPI70-22",
+            "order": 22,
+            "strategyNum": 5,
+            "strategy": "ยุทธศาสตร์ที่ 5",
+            "strategy_name": "Health-Related Economy Excellence (เศรษฐกิจสุขภาพ)",
+            "objective": "ส่งเสริมและพัฒนาอุตสาหกรรมและบริการสุขภาพเพื่อสร้างมูลค่าทางเศรษฐกิจ",
+            "name": "รายได้ของการท่องเที่ยวเชิงสุขภาพ — เสนอเปลี่ยนจากอัตราการเพิ่มขึ้นของสถานบริการ",
+            "unit": "ร้อยละ",
+            "direction": "ยิ่งมากยิ่งดี",
+            "baseline": "-",
+            "target": "ตามเกณฑ์",
+            "actual": null,
+            "status": null,
+            "responsible_dept": null,
+            "note_revision": "แผนเดิมเน้นจำนวนสถานบริการ ปี 70 เสนอเปลี่ยนเป็นวัดรายได้",
+            "is_moph": true,
+            "moph_ref": "Master-22",
+            "is_inspect": false,
+            "inspect_no": null,
+            "is_cup": true,
+            "cup_code": "K501 (ใกล้เคียง)",
+            "is_pao": false,
+            "pao_ref": null,
+            "policy_sources": [
+                  4
+            ],
+            "kpi_code": "KPI70-22"
+      }
+]
   }
 };
 
@@ -1088,7 +1685,103 @@ function updateThemeIcon(theme) {
   }
 }
 
-// 5. Data Initialization
+// 5. Data Initialization & Cloud Synchronization
+async function fetchLiveData(manual = false) {
+  const ds = getCurrentYearDataset();
+  const currentYearKey = AppState.selectedYear || '69';
+  const fiscalYearFull = (parseInt(currentYearKey, 10) < 100) ? `25${currentYearKey}` : currentYearKey;
+  
+  const client = getSupabaseClient();
+  if (client) {
+    try {
+      const { data, error } = await client
+        .from('strategic_kpis')
+        .select('*')
+        .eq('fiscal_year', fiscalYearFull)
+        .order('order_num', { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        const updatedKpis = data.map(row => ({
+          id: row.kpi_id || row.kpi_code,
+          order: row.order_num,
+          strategyNum: row.strategy_num,
+          strategy: row.strategy_name ? (row.strategy_name.includes('ยุทธศาสตร์ที่') ? row.strategy_name : `ยุทธศาสตร์ที่ ${row.strategy_num}`) : `ยุทธศาสตร์ที่ ${row.strategy_num}`,
+          strategy_name: row.strategy_name,
+          objective: row.objective_name,
+          name: row.kpi_name,
+          unit: row.unit || 'ร้อยละ',
+          direction: row.direction || 'ยิ่งมากยิ่งดี',
+          baseline: row.baseline || '-',
+          target: row.target || '-',
+          actual: row.actual,
+          status: row.status,
+          responsible_dept: row.responsible_dept,
+          note_revision: row.note_revision,
+          is_moph: Boolean(row.is_moph),
+          moph_ref: row.moph_ref,
+          is_inspect: Boolean(row.is_inspect),
+          inspect_no: row.inspect_no,
+          is_cup: Boolean(row.is_cup),
+          cup_code: row.cup_code,
+          is_pao: Boolean(row.is_pao),
+          pao_ref: row.pao_ref,
+          policy_sources: row.policy_sources || [],
+          kpi_code: row.kpi_code || row.kpi_id
+        }));
+
+        if (OFFICIAL_DATASET[currentYearKey]) {
+          OFFICIAL_DATASET[currentYearKey].kpis = updatedKpis;
+        }
+        AppState.kpiData = updatedKpis;
+        renderApp();
+      }
+    } catch (err) {
+      console.warn('Supabase fetchLiveData error:', err);
+    }
+  }
+
+  // Update sync timestamp pill
+  const syncPill = document.getElementById('sync-status-pill');
+  if (syncPill) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const textEl = syncPill.querySelector('.sync-text');
+    if (textEl) {
+      textEl.textContent = `อัพเดทข้อมูล ${dateStr} เวลา ${timeStr} น.`;
+    }
+  }
+
+  if (manual && typeof showAppToast === 'function') {
+    showAppToast('☁️ ซิงค์ข้อมูลสำเร็จ', `ดึงข้อมูลตัวชี้วัดปี ${ds.yearName} จาก Supabase Cloud เรียบร้อยแล้ว`, '✔️');
+  }
+}
+
+function setupSupabaseRealtime() {
+  const client = getSupabaseClient();
+  if (!client) return;
+  try {
+    client
+      .channel('strategic_kpis_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'strategic_kpis' }, (payload) => {
+        console.log('Realtime change detected in strategic_kpis:', payload);
+        fetchLiveData(false);
+      })
+      .subscribe();
+  } catch(e) {
+    console.warn('Realtime subscription error:', e);
+  }
+}
+
+function setupAutoSync() {
+  if (AppState.syncTimer) clearInterval(AppState.syncTimer);
+  if (AppState.autoSyncInterval > 0) {
+    AppState.syncTimer = setInterval(() => {
+      fetchLiveData(false);
+    }, AppState.autoSyncInterval * 1000);
+  }
+}
+
 function initData() {
   const ds = getCurrentYearDataset();
   AppState.kpiData = ds.kpis;
@@ -2124,6 +2817,7 @@ function renderKPIList() {
           <tr>
             <th class="col-kpi-id">รหัส</th>
             <th class="col-kpi-name">ชื่อตัวชี้วัดเชิงยุทธศาสตร์</th>
+            <th class="col-policy-align" style="text-align: center; min-width: 140px;">ความสอดคล้องเชิงนโยบาย</th>
             <th class="col-num">หน่วยวัด</th>
             <th class="col-num">Baseline Data</th>
             <th class="col-num">เป้าหมาย (${ds.yearName})</th>
@@ -2152,22 +2846,36 @@ function renderKPIList() {
             }
 
             const alignBadgesHtml = renderAlignmentBadgesHtml({
-              isMoph: kpi.isMoph || kpi.moph || (kpi.alignment && kpi.alignment.isMoph),
-              isInspect: kpi.isInspect || kpi.inspect || (kpi.alignment && kpi.alignment.isInspect),
-              cupCode: kpi.cupCode || kpi.cup || (kpi.alignment && kpi.alignment.cupCode),
-              isPao: kpi.isPao || kpi.pao || (kpi.alignment && kpi.alignment.isPao)
+              is_moph: kpi.is_moph,
+              isMoph: kpi.isMoph,
+              moph: kpi.moph,
+              moph_ref: kpi.moph_ref,
+              is_inspect: kpi.is_inspect,
+              isInspect: kpi.isInspect,
+              inspect: kpi.inspect,
+              inspect_no: kpi.inspect_no,
+              is_cup: kpi.is_cup,
+              isCup: kpi.isCup,
+              cup: kpi.cup,
+              cup_code: kpi.cup_code,
+              cupCode: kpi.cupCode,
+              is_pao: kpi.is_pao,
+              isPao: kpi.isPao,
+              pao: kpi.pao,
+              pao_ref: kpi.pao_ref,
+              alignment: kpi.alignment
             });
 
             return `
               <tr onclick="openKPIDetailModal('${kpi.id}')" style="cursor: pointer;">
                 <td class="col-kpi-id"><strong>${kpi.id}</strong></td>
                 <td class="col-kpi-name">
-                  <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
-                    <span style="font-weight: 700;">${kpi.name}</span>
-                    ${alignBadgesHtml}
-                  </div>
+                  <div style="font-weight: 700;">${kpi.name}</div>
                   <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">${kpi.strategy} | ${kpi.objective || ''}</div>
                   ${subHtml}
+                </td>
+                <td class="col-policy-align" style="text-align: center;">
+                  ${alignBadgesHtml || '<span style="color: var(--text-muted); font-size: 0.72rem;">-</span>'}
                 </td>
                 <td class="col-num">${kpi.unit || '-'}</td>
                 <td class="col-num" style="color: var(--text-muted);">${formatKPIValueWithUnit(kpi.baseline, kpi.unit)}</td>
@@ -7151,10 +7859,24 @@ function openKPIDetailModal(kpiId) {
   const overallStrokeColor = evalRes.status === 'pass' ? '#10b981' : (evalRes.status === 'fail' ? '#ef4444' : '#f59e0b');
 
   const alignBadgesHtml = renderAlignmentBadgesHtml({
-    isMoph: kpi.isMoph || kpi.moph || (kpi.alignment && kpi.alignment.isMoph),
-    isInspect: kpi.isInspect || kpi.inspect || (kpi.alignment && kpi.alignment.isInspect),
-    cupCode: kpi.cupCode || kpi.cup || (kpi.alignment && kpi.alignment.cupCode),
-    isPao: kpi.isPao || kpi.pao || (kpi.alignment && kpi.alignment.isPao)
+    is_moph: kpi.is_moph,
+    isMoph: kpi.isMoph,
+    moph: kpi.moph,
+    moph_ref: kpi.moph_ref,
+    is_inspect: kpi.is_inspect,
+    isInspect: kpi.isInspect,
+    inspect: kpi.inspect,
+    inspect_no: kpi.inspect_no,
+    is_cup: kpi.is_cup,
+    isCup: kpi.isCup,
+    cup: kpi.cup,
+    cup_code: kpi.cup_code,
+    cupCode: kpi.cupCode,
+    is_pao: kpi.is_pao,
+    isPao: kpi.isPao,
+    pao: kpi.pao,
+    pao_ref: kpi.pao_ref,
+    alignment: kpi.alignment
   });
 
   dialog.innerHTML = `
@@ -9081,78 +9803,45 @@ window.fallbackCopyText = fallbackCopyText;
 // STRATEGIC ALIGNMENT BADGES RENDERER (กสธ. / ตรก. / CUP / อบจ.)
 // ============================================================================
 function renderAlignmentBadgesHtml(alignment = {}) {
-  const { isMoph, isInspect, cupCode, isPao, className = '' } = alignment;
+  const isMoph = Boolean(alignment.is_moph ?? alignment.isMoph ?? alignment.moph ?? (alignment.alignment && alignment.alignment.isMoph));
+  const mophRef = alignment.moph_ref ?? alignment.mophRef ?? '';
+  
+  const isInspect = Boolean(alignment.is_inspect ?? alignment.isInspect ?? alignment.inspect ?? (alignment.alignment && alignment.alignment.isInspect));
+  const inspectNo = alignment.inspect_no ?? alignment.inspectNo ?? '';
+  
+  const isCup = Boolean(alignment.is_cup ?? alignment.isCup ?? alignment.cup ?? (alignment.alignment && alignment.alignment.isCup) ?? (alignment.cup_code || alignment.cupCode ? true : false));
+  const cupCode = alignment.cup_code ?? alignment.cupCode ?? '';
+  
+  const isPao = Boolean(alignment.is_pao ?? alignment.isPao ?? alignment.pao ?? (alignment.alignment && alignment.alignment.isPao));
+  const paoRef = alignment.pao_ref ?? alignment.paoRef ?? '';
+  
+  const className = alignment.className || '';
   const badges = [];
 
-  // 1. กสธ. (Landmark)
+  // 1. กสธ. - Tag สีทอง: [ 🏛️ กสธ. ] (พร้อม Tooltip: moph_ref)
   if (isMoph) {
-    badges.push(`
-      <span title="สอดคล้องแผนแม่บทกระทรวงสาธารณสุข 2570" class="align-badge align-badge-moph">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="22" x2="21" y2="22"></line>
-          <line x1="6" y1="18" x2="6" y2="11"></line>
-          <line x1="10" y1="18" x2="10" y2="11"></line>
-          <line x1="14" y1="18" x2="14" y2="11"></line>
-          <line x1="18" y1="18" x2="18" y2="11"></line>
-          <polygon points="12 2 20 7 4 7"></polygon>
-        </svg>
-        กสธ.
-      </span>
-    `);
+    const tip = mophRef ? `สอดคล้องแผนแม่บทกระทรวงสาธารณสุข: ${mophRef}` : 'สอดคล้องแผนแม่บทกระทรวงสาธารณสุข (กสธ.)';
+    badges.push(`<span class="align-badge align-badge-moph" title="${tip}">🏛️ กสธ.</span>`);
   }
 
-  // 2. ตรวจราชการ (ClipboardCheck)
+  // 2. ตรก. - Tag สีชมพู: [ 📋 ตรก. ] (พร้อม Tooltip: inspect_no)
   if (isInspect) {
-    badges.push(`
-      <span title="สอดคล้องประเด็นตรวจราชการเขตสุขภาพ" class="align-badge align-badge-inspect">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-          <path d="m9 14 2 2 4-4"></path>
-        </svg>
-        ตรก.
-      </span>
-    `);
+    const tip = inspectNo ? `สอดคล้องประเด็นตรวจราชการเขตสุขภาพ: ${inspectNo}` : 'สอดคล้องประเด็นตรวจราชการเขตสุขภาพ (ตรก.)';
+    badges.push(`<span class="align-badge align-badge-inspect" title="${tip}">📋 ตรก.</span>`);
   }
 
-  // 3. CUP (Hospital)
-  if (cupCode) {
-    const label = String(cupCode).startsWith('K') ? `CUP: ${String(cupCode).split(' ')[0]}` : 'CUP';
-    badges.push(`
-      <span title="สอดคล้องเกณฑ์นิเทศระดับอำเภอ/CUP: ${cupCode}" class="align-badge align-badge-cup">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 6v4"></path>
-          <path d="M14 14h-4"></path>
-          <path d="M14 18h-4"></path>
-          <path d="M14 8h-4"></path>
-          <path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2"></path>
-          <path d="M18 22V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v18"></path>
-        </svg>
-        ${label}
-      </span>
-    `);
+  // 3. CUP - Tag สีเขียว: [ 🏥 CUP: {cup_code} ]
+  if (isCup) {
+    const cleanCode = cupCode ? String(cupCode).split(' ')[0] : '';
+    const label = cleanCode ? `🏥 CUP: ${cleanCode}` : '🏥 CUP';
+    const tip = cupCode ? `สอดคล้องเกณฑ์นิเทศระดับอำเภอ/CUP: ${cupCode}` : 'สอดคล้องเกณฑ์นิเทศระดับอำเภอ (CUP)';
+    badges.push(`<span class="align-badge align-badge-cup" title="${tip}">${label}</span>`);
   }
 
-  // 4. อบจ. (Building)
+  // 4. อบจ. - Tag สีฟ้าคราม: [ 🏢 อบจ. ] (พร้อม Tooltip: pao_ref)
   if (isPao) {
-    badges.push(`
-      <span title="สอดคล้องภารกิจถ่ายโอน รพ.สต. สู่ อบจ." class="align-badge align-badge-pao">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-          <path d="M9 22v-4h6v4"></path>
-          <path d="M8 6h.01"></path>
-          <path d="M16 6h.01"></path>
-          <path d="M12 6h.01"></path>
-          <path d="M12 10h.01"></path>
-          <path d="M12 14h.01"></path>
-          <path d="M16 10h.01"></path>
-          <path d="M16 14h.01"></path>
-          <path d="M8 10h.01"></path>
-          <path d="M8 14h.01"></path>
-        </svg>
-        อบจ.
-      </span>
-    `);
+    const tip = paoRef ? `สอดคล้องภารกิจถ่ายโอน รพ.สต. สู่ อบจ.: ${paoRef}` : 'สอดคล้องภารกิจถ่ายโอน รพ.สต. สู่ อบจ.';
+    badges.push(`<span class="align-badge align-badge-pao" title="${tip}">🏢 อบจ.</span>`);
   }
 
   if (badges.length === 0) return '';
