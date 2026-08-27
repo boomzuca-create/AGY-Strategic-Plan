@@ -1356,7 +1356,14 @@ function evaluateStatus(kpi) {
   }
 
   if (actual === null || target === null) {
-    if (actualRaw.toString().includes('ผ่าน') || actualRaw.toString().includes('บรรลุ') || actualRaw.toString().includes('ระดับ 5')) {
+    const actStr = actualRaw.toString().trim();
+    const tgtStr = targetRaw ? targetRaw.toString().trim() : '';
+    if (
+      actStr.includes('ผ่าน') || 
+      actStr.includes('บรรลุ') || 
+      actStr.includes('ระดับ 5') ||
+      (tgtStr !== '' && tgtStr !== '-' && tgtStr !== 'NA' && actStr === tgtStr)
+    ) {
       return { status: 'pass', label: 'ผ่านเกณฑ์เป้าหมาย', badgeClass: 'pass' };
     }
     return { status: 'pending', label: 'รอประมวลผล', badgeClass: 'pending' };
