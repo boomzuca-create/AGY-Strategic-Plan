@@ -1891,8 +1891,8 @@ function renderPillarsTab() {
 
     const passRateNum = evaluated > 0 ? (pass / evaluated) * 100 : 0;
     const passRate = passRateNum.toFixed(2);
-    const radius = 38;
-    const strokeWidth = 8;
+    const radius = 45;
+    const strokeWidth = 7.5;
     const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference - (passRateNum / 100) * circumference;
 
@@ -1915,10 +1915,10 @@ function renderPillarsTab() {
           </p>
         </div>
 
-        <!-- Center Visual Gauge (Mini Donut Ring Gauge 100px) -->
+        <!-- Center Visual Gauge (Mini Donut Ring Gauge 118px) -->
         <div class="pillar-gauge-container">
           <div class="pillar-gauge-wrapper">
-            <svg class="pillar-gauge-svg" viewBox="0 0 100 100">
+            <svg class="pillar-gauge-svg" viewBox="0 0 110 110">
               <defs>
                 <linearGradient id="deep-grad-${p.num}" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stop-color="${theme.gradient[0]}" />
@@ -1926,15 +1926,15 @@ function renderPillarsTab() {
                 </linearGradient>
               </defs>
               <!-- Outer Track -->
-              <circle class="pillar-gauge-track" cx="50" cy="50" r="${radius}" fill="none" stroke-width="${strokeWidth}" />
+              <circle class="pillar-gauge-track" cx="55" cy="55" r="${radius}" fill="none" stroke-width="${strokeWidth}" />
               <!-- Progress Arc -->
-              <circle class="pillar-gauge-progress" cx="50" cy="50" r="${radius}" fill="none"
+              <circle class="pillar-gauge-progress" cx="55" cy="55" r="${radius}" fill="none"
                 stroke="url(#deep-grad-${p.num})"
                 stroke-width="${strokeWidth}"
                 stroke-linecap="round"
                 stroke-dasharray="${circumference}"
                 stroke-dashoffset="${strokeDashoffset}"
-                transform="rotate(-90 50 50)" />
+                transform="rotate(-90 55 55)" />
             </svg>
             <div class="pillar-gauge-center">
               <span class="pillar-gauge-val">${passRate}%</span>
