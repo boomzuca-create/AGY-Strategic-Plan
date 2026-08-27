@@ -2067,12 +2067,29 @@ function renderKPIList() {
     container.className = 'kpi-cards-grid';
     container.innerHTML = filtered.map(kpi => {
       const evalRes = evaluateStatus(kpi);
+      const alignBadgesHtml = renderAlignmentBadgesHtml({
+        isMoph: kpi.is_moph ?? kpi.isMoph ?? kpi.moph ?? (kpi.alignment && kpi.alignment.isMoph),
+        isInspect: kpi.is_inspect ?? kpi.isInspect ?? kpi.inspect ?? (kpi.alignment && kpi.alignment.isInspect),
+        cupCode: kpi.cup_code ?? kpi.cupCode ?? kpi.cup ?? (kpi.alignment && kpi.alignment.cupCode),
+        isPao: kpi.is_pao ?? kpi.isPao ?? kpi.pao ?? (kpi.alignment && kpi.alignment.isPao)
+      });
+
       return `
         <div class="kpi-card" onclick="openKPIDetailModal('${kpi.id}')">
           <div>
-            <div class="kpi-card-top">
-              <span class="kpi-id-pill">${kpi.id}</span>
-              <span class="badge-status ${evalRes.badgeClass}">${evalRes.label}</span>
+            <div class="kpi-card-top" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+                <span class="kpi-id-pill" style="background: #059669; color: #ffffff; font-weight: 700; font-size: 0.72rem; padding: 0.2rem 0.55rem; border-radius: 6px;">
+                  ${kpi.id || kpi.kpi_code}
+                </span>
+                <span style="color: #38bdf8; font-size: 0.76rem; font-weight: 600;">
+                  ${(kpi.strategy || kpi.strategy_name || '').split(' ')[0]} &gt; ${kpi.objective || kpi.objective_name || ''}
+                </span>
+                <span class="badge-status ${evalRes.badgeClass}">${evalRes.label}</span>
+              </div>
+              
+              <!-- ฝั่งขวาบน: แท็กความสอดคล้อง 4 สายงาน -->
+              ${alignBadgesHtml}
             </div>
             <div class="kpi-card-title">${kpi.name}</div>
           </div>
@@ -7143,9 +7160,12 @@ function openKPIDetailModal(kpiId) {
     <!-- Header -->
     <div class="modal-insight-header">
       <div style="flex: 1; min-width: 0; padding-right: 0.75rem;">
-        <div class="modal-header-meta" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-          <span class="badge-kpi-id">${kpi.id}</span>
-          <span class="breadcrumb-strat">${kpi.strategy} &rsaquo; ${kpi.objective || ''}</span>
+        <div class="modal-header-meta" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span class="badge-kpi-id" style="background: #059669; color: #ffffff; font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px;">${kpi.id || kpi.kpi_code}</span>
+            <span class="breadcrumb-strat" style="color: #38bdf8; font-weight: 600; font-size: 0.8rem;">${(kpi.strategy || kpi.strategy_name || '').split(' ')[0]} &gt; ${kpi.objective || kpi.objective_name || ''}</span>
+          </div>
+          <!-- ฝั่งขวาบน: แท็กความสอดคล้อง 4 สายงาน -->
           ${alignBadgesHtml}
         </div>
         <h2 class="modal-insight-title" title="${kpi.name}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;">${kpi.name}</h2>

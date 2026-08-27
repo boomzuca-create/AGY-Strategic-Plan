@@ -51,4 +51,28 @@ export const AlignmentBadges = ({ isMoph, isInspect, cupCode, isPao, className =
   );
 };
 
+export const KPICardHeader = ({ kpi, className = '' }) => {
+  if (!kpi) return null;
+  return (
+    <div className={`flex flex-wrap items-center justify-between gap-3 mb-2 ${className}`}>
+      <div className="flex items-center gap-3">
+        <span className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-lg">
+          {kpi.kpi_code || kpi.id}
+        </span>
+        <span className="text-sky-400 text-sm font-medium">
+          {(kpi.strategy_name || kpi.strategy || '').split(' ')[0]} &gt; {kpi.objective_name || kpi.objective || ''}
+        </span>
+      </div>
+
+      {/* ฝั่งขวาบน: แท็กความสอดคล้อง 4 สายงาน */}
+      <AlignmentBadges 
+        isMoph={kpi.is_moph ?? kpi.isMoph} 
+        isInspect={kpi.is_inspect ?? kpi.isInspect} 
+        cupCode={kpi.cup_code ?? kpi.cupCode} 
+        isPao={kpi.is_pao ?? kpi.isPao} 
+      />
+    </div>
+  );
+};
+
 export default AlignmentBadges;
