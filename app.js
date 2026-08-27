@@ -7141,11 +7141,12 @@ function openKPIDetailModal(kpiId) {
   const t70 = m70?.target || kpi.target70 || t69 || '-';
   const a70 = m70?.actual || '-';
 
-  // Evaluate yearly status for colors in table
-  const eval66 = evaluateYearPair(a66, t66, kpi.direction);
-  const eval67 = evaluateYearPair(a67, t67, kpi.direction);
-  const eval68 = evaluateYearPair(a68, t68, kpi.direction);
-  const eval69 = evaluateYearPair(a69, t69, kpi.direction);
+  // Evaluate yearly status for colors in table using each year's respective KPI direction and rules
+  const eval66 = m66 ? evaluateStatus(m66) : evaluateYearPair(a66, t66, kpi.direction);
+  const eval67 = m67 ? evaluateStatus(m67) : evaluateYearPair(a67, t67, kpi.direction);
+  const eval68 = m68 ? evaluateStatus(m68) : evaluateYearPair(a68, t68, kpi.direction);
+  const eval69 = m69 ? evaluateStatus(m69) : evaluateYearPair(a69, t69, kpi.direction);
+  const eval70 = m70 ? evaluateStatus(m70) : evaluateYearPair(a70, t70, kpi.direction);
 
   const overallStrokeColor = evalRes.status === 'pass' ? '#10b981' : (evalRes.status === 'fail' ? '#ef4444' : '#f59e0b');
 
@@ -7163,7 +7164,7 @@ function openKPIDetailModal(kpiId) {
         <div class="modal-header-meta" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.35rem;">
           <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
             <span class="badge-kpi-id" style="background: #059669; color: #ffffff; font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px;">${kpi.id || kpi.kpi_code}</span>
-            <span class="breadcrumb-strat" style="color: #38bdf8; font-weight: 600; font-size: 0.8rem;">${(kpi.strategy || kpi.strategy_name || '').split(' ')[0]} &gt; ${kpi.objective || kpi.objective_name || ''}</span>
+            <span class="breadcrumb-strat" style="color: #38bdf8; font-weight: 600; font-size: 0.8rem;">${kpi.strategy || kpi.strategy_name || ''} &gt; ${kpi.objective || kpi.objective_name || ''}</span>
           </div>
           <!-- ฝั่งขวาบน: แท็กความสอดคล้อง 4 สายงาน -->
           ${alignBadgesHtml}
@@ -8737,12 +8738,18 @@ function renderModalKPIChart(kpi, history) {
   const targetData = rawTargets.map(parseVal);
   const actualData = rawActuals.map(parseVal);
 
+  const m66 = findMatchingKPIInYear(kpi, '66');
+  const m67 = findMatchingKPIInYear(kpi, '67');
+  const m68 = findMatchingKPIInYear(kpi, '68');
+  const m69 = findMatchingKPIInYear(kpi, '69');
+  const m70 = findMatchingKPIInYear(kpi, '70');
+
   const evalPairs = [
-    evaluateYearPair(history.a66, history.t66, kpi.direction),
-    evaluateYearPair(history.a67, history.t67, kpi.direction),
-    evaluateYearPair(history.a68, history.t68, kpi.direction),
-    evaluateYearPair(history.a69, history.t69, kpi.direction),
-    evaluateYearPair(history.a70, history.t70, kpi.direction)
+    m66 ? evaluateStatus(m66) : evaluateYearPair(history.a66, history.t66, kpi.direction),
+    m67 ? evaluateStatus(m67) : evaluateYearPair(history.a67, history.t67, kpi.direction),
+    m68 ? evaluateStatus(m68) : evaluateYearPair(history.a68, history.t68, kpi.direction),
+    m69 ? evaluateStatus(m69) : evaluateYearPair(history.a69, history.t69, kpi.direction),
+    m70 ? evaluateStatus(m70) : evaluateYearPair(history.a70, history.t70, kpi.direction)
   ];
 
   const pointColors = evalPairs.map((res, idx) => {
