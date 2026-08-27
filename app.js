@@ -1887,6 +1887,20 @@ const AppState = {
   activeStrategyFilter: 'all',
   activeStatusFilter: 'all',
   searchQuery: '',
+  columnFilters: {
+    id: '',
+    name: '',
+    policy: 'all', // 'all', 'aligned', 'moph', 'inspect', 'cup', 'pao', 'none'
+    unit: 'all',
+    baseline: '',
+    target: '',
+    actual: '',
+    status: 'all' // 'all', 'pass', 'fail', 'pending'
+  },
+  sortConfig: {
+    column: 'order', // 'id', 'name', 'policy', 'unit', 'baseline', 'target', 'actual', 'status', 'order'
+    direction: 'asc' // 'asc', 'desc'
+  },
   viewMode: 'table', // 'table' (default) or 'grid'
   lastSyncTime: null,
   syncTimer: null,
@@ -2228,6 +2242,17 @@ function updateStrategyFilterOptions() {
   }
 }
 
+// Safe HTML escape helper
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // Global Filter Handlers (ทำงานได้ทั้งผ่าน Event Listener และ Inline OnChange)
 function handleStrategyFilterChange(val) {
   AppState.activeStrategyFilter = val || 'all';
@@ -2244,10 +2269,51 @@ function handleSearchInputChange(val) {
   renderKPIList();
 }
 
+// Column Filter & Sort Handlers
+function handleColumnFilterChange(colKey, val) {
+  if (!AppState.columnFilters) {
+    AppState.columnFilters = { id: '', name: '', policy: 'all', unit: 'all', baseline: '', target: '', actual: '', status: 'all' };
+  }
+  AppState.columnFilters[colKey] = (val || '').trim();
+  renderKPIList();
+}
+
+function handleSortColumn(colKey) {
+  if (!AppState.sortConfig) {
+    AppState.sortConfig = { column: 'order', direction: 'asc' };
+  }
+  if (AppState.sortConfig.column === colKey) {
+    AppState.sortConfig.direction = AppState.sortConfig.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    AppState.sortConfig.column = colKey;
+    AppState.sortConfig.direction = 'asc';
+  }
+  renderKPIList();
+}
+
+function resetColumnFilters() {
+  AppState.columnFilters = {
+    id: '',
+    name: '',
+    policy: 'all',
+    unit: 'all',
+    baseline: '',
+    target: '',
+    actual: '',
+    status: 'all'
+  };
+  AppState.sortConfig = {
+    column: 'order',
+    direction: 'asc'
+  };
+  renderKPIList();
+}
+
 function resetAllKpiFilters() {
   AppState.activeStrategyFilter = 'all';
   AppState.activeStatusFilter = 'all';
   AppState.searchQuery = '';
+  resetColumnFilters();
 
   const stratSelect = document.getElementById('strategy-filter-select');
   if (stratSelect) stratSelect.value = 'all';
@@ -3071,12 +3137,26 @@ function renderPillarsTab() {
 }
 
 // 9.5 Helper: Get Currently Filtered KPIs Subset
+// 9.5 Helper: Get Currently Filtered KPIs Subset with Full Column Filters and Multi-Column Sorting
 function getCurrentlyFilteredKPIs() {
   const ds = getCurrentYearDataset();
   if (!ds || !ds.kpis) return [];
 
-  return ds.kpis.filter(kpi => {
-    // 1. กรองตามยุทธศาสตร์ (Strategy Filter)
+  if (!AppState.columnFilters) {
+    AppState.columnFilters = {
+      id: '',
+      name: '',
+      policy: 'all',
+      unit: 'all',
+      baseline: '',
+      target: '',
+      actual: '',
+      status: 'all'
+    };
+  }
+
+  let filtered = ds.kpis.filter(kpi => {
+    // 1. กรองตามยุทธศาสตร์หลัก (Global Strategy Filter)
     if (AppState.activeStrategyFilter && AppState.activeStrategyFilter !== 'all') {
       const targetStrat = AppState.activeStrategyFilter.trim();
       const matchStratNum = targetStrat.match(/\d+/);
@@ -3088,7 +3168,7 @@ function getCurrentlyFilteredKPIs() {
       if (!isMatch) return false;
     }
 
-    // 2. กรองตามสถานะการประเมิน (Status Filter: pass, fail, pending)
+    // 2. กรองตามสถานะการประเมินหลัก (Global Status Filter)
     if (AppState.activeStatusFilter && AppState.activeStatusFilter !== 'all') {
       const evalRes = evaluateStatus(kpi);
       const targetStatus = AppState.activeStatusFilter.toLowerCase().trim();
@@ -3104,7 +3184,7 @@ function getCurrentlyFilteredKPIs() {
       }
     }
 
-    // 3. กรองตามคำค้นหา (Search Query)
+    // 3. กรองตามคำค้นหาหลัก (Global Search Query)
     if (AppState.searchQuery) {
       const q = AppState.searchQuery.toLowerCase().trim();
       const combined = `${kpi.id || ''} ${kpi.name || ''} ${kpi.strategy || ''} ${kpi.objective || ''} ${kpi.responsibleDept || ''} ${kpi.unit || ''} ${kpi.notes || ''}`.toLowerCase();
@@ -3113,8 +3193,146 @@ function getCurrentlyFilteredKPIs() {
       }
     }
 
+    // --- คอลัมน์ที่ 1: กรองตามรหัสตัวชี้วัด (Column Filter: ID) ---
+    if (AppState.columnFilters.id) {
+      const qId = AppState.columnFilters.id.toLowerCase().trim();
+      const kpiIdStr = String(kpi.id || kpi.kpi_code || '').toLowerCase();
+      if (!kpiIdStr.includes(qId)) return false;
+    }
+
+    // --- คอลัมน์ที่ 2: กรองตามชื่อตัวชี้วัด / ยุทธศาสตร์ / เป้าประสงค์ (Column Filter: Name) ---
+    if (AppState.columnFilters.name) {
+      const qName = AppState.columnFilters.name.toLowerCase().trim();
+      const nameStr = `${kpi.name || ''} ${kpi.strategy || ''} ${kpi.objective || ''}`.toLowerCase();
+      if (!nameStr.includes(qName)) return false;
+    }
+
+    // --- คอลัมน์ที่ 3: กรองตามความสอดคล้องเชิงนโยบาย (Column Filter: Policy Alignment) ---
+    if (AppState.columnFilters.policy && AppState.columnFilters.policy !== 'all') {
+      const pol = AppState.columnFilters.policy.toLowerCase();
+      const isMoph = Boolean(kpi.is_moph || kpi.isMoph || kpi.moph);
+      const isInspect = Boolean(kpi.is_inspect || kpi.isInspect || kpi.inspect);
+      const isCup = Boolean(kpi.is_cup || kpi.isCup || kpi.cup || kpi.cup_code || kpi.cupCode);
+      const isPao = Boolean(kpi.is_pao || kpi.isPao || kpi.pao);
+      const hasAny = isMoph || isInspect || isCup || isPao;
+
+      if (pol === 'aligned' || pol === 'any') {
+        if (!hasAny) return false;
+      } else if (pol === 'moph') {
+        if (!isMoph) return false;
+      } else if (pol === 'inspect') {
+        if (!isInspect) return false;
+      } else if (pol === 'cup') {
+        if (!isCup) return false;
+      } else if (pol === 'pao') {
+        if (!isPao) return false;
+      } else if (pol === 'none') {
+        if (hasAny) return false;
+      }
+    }
+
+    // --- คอลัมน์ที่ 4: กรองตามหน่วยวัด (Column Filter: Unit) ---
+    if (AppState.columnFilters.unit && AppState.columnFilters.unit !== 'all') {
+      const qUnit = AppState.columnFilters.unit.trim();
+      const kpiUnit = String(kpi.unit || '').trim();
+      if (kpiUnit !== qUnit) return false;
+    }
+
+    // --- คอลัมน์ที่ 5: กรองตาม Baseline Data (Column Filter: Baseline) ---
+    if (AppState.columnFilters.baseline) {
+      const qBase = AppState.columnFilters.baseline.toLowerCase().trim();
+      const baseStr = String(kpi.baseline || '').toLowerCase();
+      if (!baseStr.includes(qBase)) return false;
+    }
+
+    // --- คอลัมน์ที่ 6: กรองตามเป้าหมาย (Column Filter: Target) ---
+    if (AppState.columnFilters.target) {
+      const qTgt = AppState.columnFilters.target.toLowerCase().trim();
+      const tgtStr = String(kpi.target || '').toLowerCase();
+      if (!tgtStr.includes(qTgt)) return false;
+    }
+
+    // --- คอลัมน์ที่ 7: กรองตามผลการดำเนินงาน (Column Filter: Actual) ---
+    if (AppState.columnFilters.actual) {
+      const qAct = AppState.columnFilters.actual.toLowerCase().trim();
+      const actStr = String(kpi.actual === null || kpi.actual === undefined ? '-' : kpi.actual).toLowerCase();
+      if (!actStr.includes(qAct)) return false;
+    }
+
+    // --- คอลัมน์ที่ 8: กรองตามสถานะการประเมิน (Column Filter: Status) ---
+    if (AppState.columnFilters.status && AppState.columnFilters.status !== 'all') {
+      const evalRes = evaluateStatus(kpi);
+      const targetStatus = AppState.columnFilters.status.toLowerCase().trim();
+
+      if (targetStatus === 'pass') {
+        if (evalRes.status !== 'pass' && kpi.status !== 'บรรลุเป้าหมาย') return false;
+      } else if (targetStatus === 'fail') {
+        if (evalRes.status !== 'fail' && kpi.status !== 'ไม่บรรลุเป้าหมาย') return false;
+      } else if (targetStatus === 'pending') {
+        if (evalRes.status !== 'pending' && kpi.status !== 'อยู่ระหว่างดำเนินการ' && kpi.status !== 'รอประมวลผล') return false;
+      } else if (evalRes.status !== targetStatus) {
+        return false;
+      }
+    }
+
     return true;
   });
+
+  // --- การเรียงลำดับข้อมูลตามคอลัมน์ (Column Sorting) ---
+  if (AppState.sortConfig && AppState.sortConfig.column) {
+    const { column, direction } = AppState.sortConfig;
+    const modifier = direction === 'desc' ? -1 : 1;
+
+    filtered.sort((a, b) => {
+      switch (column) {
+        case 'id':
+          const numA = a.order || parseInt(String(a.id).replace(/\D+/g, '') || '0', 10);
+          const numB = b.order || parseInt(String(b.id).replace(/\D+/g, '') || '0', 10);
+          return (numA - numB) * modifier;
+
+        case 'name':
+          return (a.name || '').localeCompare(b.name || '', 'th') * modifier;
+
+        case 'policy':
+          const countA = (a.is_moph?1:0) + (a.is_inspect?1:0) + (a.is_cup?1:0) + (a.is_pao?1:0);
+          const countB = (b.is_moph?1:0) + (b.is_inspect?1:0) + (b.is_cup?1:0) + (b.is_pao?1:0);
+          return (countA - countB) * modifier;
+
+        case 'unit':
+          return (a.unit || '').localeCompare(b.unit || '', 'th') * modifier;
+
+        case 'baseline':
+          const nBaseA = extractNumber(a.baseline);
+          const nBaseB = extractNumber(b.baseline);
+          if (nBaseA !== null && nBaseB !== null) return (nBaseA - nBaseB) * modifier;
+          return String(a.baseline || '').localeCompare(String(b.baseline || ''), 'th') * modifier;
+
+        case 'target':
+          const nTgtA = extractNumber(a.target);
+          const nTgtB = extractNumber(b.target);
+          if (nTgtA !== null && nTgtB !== null) return (nTgtA - nTgtB) * modifier;
+          return String(a.target || '').localeCompare(String(b.target || ''), 'th') * modifier;
+
+        case 'actual':
+          const nActA = extractNumber(a.actual);
+          const nActB = extractNumber(b.actual);
+          if (nActA !== null && nActB !== null) return (nActA - nActB) * modifier;
+          return String(a.actual || '').localeCompare(String(b.actual || ''), 'th') * modifier;
+
+        case 'status':
+          const sA = evaluateStatus(a).status;
+          const sB = evaluateStatus(b).status;
+          const rank = { pass: 1, fail: 2, pending: 3, none: 4 };
+          return ((rank[sA] || 5) - (rank[sB] || 5)) * modifier;
+
+        case 'order':
+        default:
+          return ((a.order || 0) - (b.order || 0)) * modifier;
+      }
+    });
+  }
+
+  return filtered;
 }
 
 // 10. Render KPI List (Cards & Table)
@@ -3145,42 +3363,65 @@ function renderKPIList() {
 
   const filtered = getCurrentlyFilteredKPIs();
 
+  const cf = AppState.columnFilters || { id: '', name: '', policy: 'all', unit: 'all', baseline: '', target: '', actual: '', status: 'all' };
+  const sort = AppState.sortConfig || { column: 'order', direction: 'asc' };
+  const hasActiveColFilter = cf.id || cf.name || (cf.policy !== 'all') || (cf.unit !== 'all') || cf.baseline || cf.target || cf.actual || (cf.status !== 'all');
+
   if (countEl) {
     let filterDetail = '';
     if (AppState.activeStatusFilter === 'pass') filterDetail = ' (🟢 ผ่านเกณฑ์)';
     else if (AppState.activeStatusFilter === 'fail') filterDetail = ' (🔴 ไม่ผ่านเกณฑ์)';
     else if (AppState.activeStatusFilter === 'pending') filterDetail = ' (🟡 รอประมวลผล)';
 
-    if (filtered.length === ds.kpis.length && AppState.activeStrategyFilter === 'all' && AppState.activeStatusFilter === 'all' && !AppState.searchQuery) {
+    if (hasActiveColFilter) {
+      filterDetail += ' [กรองจากคอลัมน์]';
+    }
+
+    if (filtered.length === ds.kpis.length && AppState.activeStrategyFilter === 'all' && AppState.activeStatusFilter === 'all' && !AppState.searchQuery && !hasActiveColFilter) {
       countEl.textContent = `ทั้งหมด ${filtered.length} รายการ (ปีงบประมาณ ${ds.yearName})`;
     } else {
       countEl.textContent = `แสดง ${filtered.length} / ${ds.kpis.length} รายการ${filterDetail} (ปี ${ds.yearName})`;
     }
   }
 
-  if (filtered.length === 0) {
-    container.innerHTML = `
-      <div style="grid-column: 1 / -1; padding: 3.5rem 1.5rem; text-align: center; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); border: 1px dashed var(--border-card);">
-        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
-        <p style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">ไม่พบตัวชี้วัดที่ตรงกับเงื่อนไขการค้นหา</p>
-        <p style="font-size: 0.85rem; margin-top: 0.35rem; color: var(--text-muted);">ลองปรับเปลี่ยนตัวกรองยุทธศาสตร์ สถานะ หรือคำค้นหาใหม่</p>
-        <button class="btn btn-primary btn-sm" onclick="resetAllKpiFilters()" style="margin-top: 1rem; padding: 0.45rem 1rem;">
-          🔄 ล้างตัวกรองทั้งหมด
-        </button>
-      </div>
-    `;
-    return;
-  }
-
   if (AppState.viewMode === 'grid') {
+    if (filtered.length === 0) {
+      container.className = 'kpi-cards-grid';
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; padding: 3.5rem 1.5rem; text-align: center; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); border: 1px dashed var(--border-card);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
+          <p style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">ไม่พบตัวชี้วัดที่ตรงกับเงื่อนไขการค้นหา</p>
+          <p style="font-size: 0.85rem; margin-top: 0.35rem; color: var(--text-muted);">ลองปรับเปลี่ยนตัวกรองยุทธศาสตร์ สถานะ หรือคำค้นหาใหม่</p>
+          <button class="btn btn-primary btn-sm" onclick="resetAllKpiFilters()" style="margin-top: 1rem; padding: 0.45rem 1rem;">
+            🔄 ล้างตัวกรองทั้งหมด
+          </button>
+        </div>
+      `;
+      return;
+    }
+
     container.className = 'kpi-cards-grid';
     container.innerHTML = filtered.map(kpi => {
       const evalRes = evaluateStatus(kpi);
       const alignBadgesHtml = renderAlignmentBadgesHtml({
-        isMoph: kpi.is_moph ?? kpi.isMoph ?? kpi.moph ?? (kpi.alignment && kpi.alignment.isMoph),
-        isInspect: kpi.is_inspect ?? kpi.isInspect ?? kpi.inspect ?? (kpi.alignment && kpi.alignment.isInspect),
-        cupCode: kpi.cup_code ?? kpi.cupCode ?? kpi.cup ?? (kpi.alignment && kpi.alignment.cupCode),
-        isPao: kpi.is_pao ?? kpi.isPao ?? kpi.pao ?? (kpi.alignment && kpi.alignment.isPao)
+        is_moph: kpi.is_moph,
+        isMoph: kpi.isMoph,
+        moph: kpi.moph,
+        moph_ref: kpi.moph_ref,
+        is_inspect: kpi.is_inspect,
+        isInspect: kpi.isInspect,
+        inspect: kpi.inspect,
+        inspect_no: kpi.inspect_no,
+        is_cup: kpi.is_cup,
+        isCup: kpi.isCup,
+        cup: kpi.cup,
+        cup_code: kpi.cup_code,
+        cupCode: kpi.cupCode,
+        is_pao: kpi.is_pao,
+        isPao: kpi.isPao,
+        pao: kpi.pao,
+        pao_ref: kpi.pao_ref,
+        alignment: kpi.alignment
       });
 
       return `
@@ -3226,24 +3467,157 @@ function renderKPIList() {
       `;
     }).join('');
   } else {
+    // Dynamic Unique Units for Unit Dropdown
+    const uniqueUnits = Array.from(new Set(ds.kpis.map(k => (k.unit || '').trim()).filter(Boolean)));
+
+    const getSortIcon = (col) => {
+      if (sort.column !== col) return '<span class="sort-icon">↕</span>';
+      return sort.direction === 'asc' ? '<span class="sort-icon active">▲</span>' : '<span class="sort-icon active">▼</span>';
+    };
+
+    // Save active element focus and selection before rendering
+    const activeEl = (typeof document !== 'undefined') ? document.activeElement : null;
+    const activeInputId = (activeEl && activeEl.id && (activeEl.id.startsWith('col-filter-input-') || activeEl.id.startsWith('col-filter-select-'))) 
+      ? activeEl.id 
+      : null;
+    const selStart = (activeEl && typeof activeEl.selectionStart === 'number') ? activeEl.selectionStart : null;
+    const selEnd = (activeEl && typeof activeEl.selectionEnd === 'number') ? activeEl.selectionEnd : null;
+
     container.className = 'table-responsive-container';
     container.innerHTML = `
       <table class="kpi-table">
         <thead>
-          <tr>
-            <th class="col-kpi-id">รหัส</th>
-            <th class="col-kpi-name">ชื่อตัวชี้วัดเชิงยุทธศาสตร์</th>
-            <th class="col-policy-align" style="text-align: center; min-width: 140px;">ความสอดคล้องเชิงนโยบาย</th>
-            <th class="col-num">หน่วยวัด</th>
-            <th class="col-num">Baseline Data</th>
-            <th class="col-num">เป้าหมาย (${ds.yearName})</th>
-            <th class="col-num">ผลการดำเนินงาน</th>
-            <th class="col-status">สถานะการประเมิน</th>
-            <th class="col-action" style="text-align: center;">กราฟ / AI</th>
+          <!-- 1. แถวหัวคอลัมน์ (คลิกเพื่อเรียงลำดับ Sort) -->
+          <tr class="table-header-row">
+            <th class="col-kpi-id th-sortable" onclick="handleSortColumn('id')" title="คลิกเพื่อเรียงตามรหัสตัวชี้วัด">
+              รหัส ${getSortIcon('id')}
+            </th>
+            <th class="col-kpi-name th-sortable" onclick="handleSortColumn('name')" title="คลิกเพื่อเรียงตามชื่อตัวชี้วัด">
+              ชื่อตัวชี้วัดเชิงยุทธศาสตร์ ${getSortIcon('name')}
+            </th>
+            <th class="col-policy-align th-sortable" onclick="handleSortColumn('policy')" title="คลิกเพื่อเรียงตามความสอดคล้องเชิงนโยบาย">
+              ความสอดคล้องเชิงนโยบาย ${getSortIcon('policy')}
+            </th>
+            <th class="col-num th-sortable" onclick="handleSortColumn('unit')" title="คลิกเพื่อเรียงตามหน่วยวัด">
+              หน่วยวัด ${getSortIcon('unit')}
+            </th>
+            <th class="col-num th-sortable" onclick="handleSortColumn('baseline')" title="คลิกเพื่อเรียงตาม Baseline">
+              Baseline Data ${getSortIcon('baseline')}
+            </th>
+            <th class="col-num th-sortable" onclick="handleSortColumn('target')" title="คลิกเพื่อเรียงตามเป้าหมาย">
+              เป้าหมาย (${ds.yearName}) ${getSortIcon('target')}
+            </th>
+            <th class="col-num th-sortable" onclick="handleSortColumn('actual')" title="คลิกเพื่อเรียงตามผลการดำเนินงาน">
+              ผลการดำเนินงาน ${getSortIcon('actual')}
+            </th>
+            <th class="col-status th-sortable" onclick="handleSortColumn('status')" title="คลิกเพื่อเรียงตามสถานะการประเมิน">
+              สถานะการประเมิน ${getSortIcon('status')}
+            </th>
+            <th class="col-action" style="text-align: center;">
+              กราฟ / AI
+            </th>
+          </tr>
+
+          <!-- 2. แถวตัวกรองประจำทุกคอลัมน์ (Interactive Column Filter Controls) -->
+          <tr class="table-filter-row">
+            <!-- 1. Filter: รหัส -->
+            <th class="th-filter col-kpi-id">
+              <input type="text" id="col-filter-input-id" class="col-filter-input ${cf.id ? 'active-filter' : ''}" 
+                     placeholder="🔍 กรองรหัส..." value="${escapeHtml(cf.id)}" 
+                     oninput="handleColumnFilterChange('id', this.value)"
+                     onclick="event.stopPropagation()">
+            </th>
+
+            <!-- 2. Filter: ชื่อตัวชี้วัด -->
+            <th class="th-filter col-kpi-name">
+              <input type="text" id="col-filter-input-name" class="col-filter-input ${cf.name ? 'active-filter' : ''}" 
+                     placeholder="🔍 ค้นหาชื่อ / เป้าประสงค์..." value="${escapeHtml(cf.name)}" 
+                     oninput="handleColumnFilterChange('name', this.value)"
+                     onclick="event.stopPropagation()">
+            </th>
+
+            <!-- 3. Filter: ความสอดคล้องเชิงนโยบาย -->
+            <th class="th-filter col-policy-align">
+              <select id="col-filter-select-policy" class="col-filter-select ${cf.policy !== 'all' ? 'active-filter' : ''}" 
+                      onchange="handleColumnFilterChange('policy', this.value)"
+                      onclick="event.stopPropagation()">
+                <option value="all" ${cf.policy === 'all' ? 'selected' : ''}>🌐 ทุกนโยบาย</option>
+                <option value="aligned" ${cf.policy === 'aligned' ? 'selected' : ''}>✨ มีความสอดคล้อง</option>
+                <option value="moph" ${cf.policy === 'moph' ? 'selected' : ''}>🏛️ กสธ.</option>
+                <option value="inspect" ${cf.policy === 'inspect' ? 'selected' : ''}>📋 ตรก.</option>
+                <option value="cup" ${cf.policy === 'cup' ? 'selected' : ''}>🏥 CUP</option>
+                <option value="pao" ${cf.policy === 'pao' ? 'selected' : ''}>🏢 อบจ.</option>
+                <option value="none" ${cf.policy === 'none' ? 'selected' : ''}>⚠️ ไม่มีข้อมูล</option>
+              </select>
+            </th>
+
+            <!-- 4. Filter: หน่วยวัด -->
+            <th class="th-filter col-num">
+              <select id="col-filter-select-unit" class="col-filter-select ${cf.unit !== 'all' ? 'active-filter' : ''}" 
+                      onchange="handleColumnFilterChange('unit', this.value)"
+                      onclick="event.stopPropagation()">
+                <option value="all" ${cf.unit === 'all' ? 'selected' : ''}>ทุกหน่วยวัด</option>
+                ${uniqueUnits.map(u => `<option value="${escapeHtml(u)}" ${cf.unit === u ? 'selected' : ''}>${escapeHtml(u)}</option>`).join('')}
+              </select>
+            </th>
+
+            <!-- 5. Filter: Baseline -->
+            <th class="th-filter col-num">
+              <input type="text" id="col-filter-input-baseline" class="col-filter-input ${cf.baseline ? 'active-filter' : ''}" 
+                     placeholder="🔍 กรอง Baseline..." value="${escapeHtml(cf.baseline)}" 
+                     oninput="handleColumnFilterChange('baseline', this.value)"
+                     onclick="event.stopPropagation()">
+            </th>
+
+            <!-- 6. Filter: เป้าหมาย -->
+            <th class="th-filter col-num">
+              <input type="text" id="col-filter-input-target" class="col-filter-input ${cf.target ? 'active-filter' : ''}" 
+                     placeholder="🔍 กรองเป้าหมาย..." value="${escapeHtml(cf.target)}" 
+                     oninput="handleColumnFilterChange('target', this.value)"
+                     onclick="event.stopPropagation()">
+            </th>
+
+            <!-- 7. Filter: ผลการดำเนินงาน -->
+            <th class="th-filter col-num">
+              <input type="text" id="col-filter-input-actual" class="col-filter-input ${cf.actual ? 'active-filter' : ''}" 
+                     placeholder="🔍 กรองผลงาน..." value="${escapeHtml(cf.actual)}" 
+                     oninput="handleColumnFilterChange('actual', this.value)"
+                     onclick="event.stopPropagation()">
+            </th>
+
+            <!-- 8. Filter: สถานะการประเมิน -->
+            <th class="th-filter col-status">
+              <select id="col-filter-select-status" class="col-filter-select ${cf.status !== 'all' ? 'active-filter' : ''}" 
+                      onchange="handleColumnFilterChange('status', this.value)"
+                      onclick="event.stopPropagation()">
+                <option value="all" ${cf.status === 'all' ? 'selected' : ''}>ทุกสถานะ</option>
+                <option value="pass" ${cf.status === 'pass' ? 'selected' : ''}>🟢 ผ่านเกณฑ์</option>
+                <option value="fail" ${cf.status === 'fail' ? 'selected' : ''}>🔴 ไม่ผ่านเกณฑ์</option>
+                <option value="pending" ${cf.status === 'pending' ? 'selected' : ''}>⚪ รอประมวลผล / -</option>
+              </select>
+            </th>
+
+            <!-- 9. ปุ่มล้างตัวกรองคอลัมน์ -->
+            <th class="th-filter col-action" style="text-align: center;">
+              <button class="btn-clear-col-filters" onclick="resetColumnFilters()" title="ล้างตัวกรองทุกคอลัมน์">
+                🔄 ล้าง
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody>
-          ${filtered.map(kpi => {
+          ${filtered.length === 0 ? `
+            <tr>
+              <td colspan="9" style="padding: 3rem 1rem; text-align: center; color: var(--text-muted); background: var(--bg-surface);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+                <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">ไม่พบตัวชี้วัดที่ตรงกับเงื่อนไขตัวกรองคอลัมน์</div>
+                <div style="font-size: 0.8rem; margin-top: 0.25rem; color: var(--text-muted);">ลองปรับเปลี่ยนคำค้นหา หรือกดปุ่มล้างตัวกรอง</div>
+                <button class="btn btn-secondary btn-sm" onclick="resetAllKpiFilters()" style="margin-top: 0.75rem; padding: 0.35rem 0.85rem;">
+                  🔄 ล้างตัวกรองทั้งหมด
+                </button>
+              </td>
+            </tr>
+          ` : filtered.map(kpi => {
             const evalRes = evaluateStatus(kpi);
             const hasSub = kpi.subValues && kpi.subValues.length > 0;
             
@@ -3311,8 +3685,20 @@ function renderKPIList() {
         </tbody>
       </table>
     `;
+
+    // Restore focus and cursor position after rendering
+    if (activeInputId && typeof document !== 'undefined') {
+      const restoredInput = document.getElementById(activeInputId);
+      if (restoredInput) {
+        restoredInput.focus();
+        if (selStart !== null && selEnd !== null && typeof restoredInput.setSelectionRange === 'function') {
+          restoredInput.setSelectionRange(selStart, selEnd);
+        }
+      }
+    }
   }
 }
+
 
 
 function evaluateYearPair(actualVal, targetVal, direction, unit) {
@@ -10265,6 +10651,13 @@ function renderAlignmentBadgesHtml(alignment = {}) {
 }
 
 window.renderAlignmentBadgesHtml = renderAlignmentBadgesHtml;
+window.getCurrentlyFilteredKPIs = getCurrentlyFilteredKPIs;
+window.handleColumnFilterChange = handleColumnFilterChange;
+window.handleSortColumn = handleSortColumn;
+window.resetColumnFilters = resetColumnFilters;
+window.resetAllKpiFilters = resetAllKpiFilters;
+window.renderKPIList = renderKPIList;
+
 
 // ============================================================================
 // INITIALIZATION ON DOMContentLoaded

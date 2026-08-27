@@ -2748,6 +2748,194 @@ textarea.form-control {
   font-weight: 800 !important;
 }
 
+/* ==========================================================================
+   TABLE COLUMN FILTERS & SORTING CONTROLS (ทุกคอลัมน์)
+   ========================================================================== */
+.kpi-table thead tr.table-filter-row th {
+  background: #092232 !important;
+  padding: 0.35rem 0.45rem !important;
+  border-bottom: 2px solid #0d9488 !important;
+  border-top: 1px solid rgba(13, 148, 136, 0.2) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  vertical-align: middle !important;
+}
+
+[data-theme="light"] .kpi-table thead tr.table-filter-row th {
+  background: #f0fdfa !important;
+  border-bottom: 2px solid #0d9488 !important;
+  border-top: 1px solid #ccfbf1 !important;
+}
+
+.col-filter-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.28rem 0.45rem;
+  font-size: 0.72rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(13, 148, 136, 0.4);
+  border-radius: 5px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .col-filter-input {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #99f6e4;
+}
+
+.col-filter-input::placeholder {
+  color: rgba(148, 163, 184, 0.65);
+}
+
+.col-filter-input:focus {
+  border-color: #38bdf8;
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+
+[data-theme="light"] .col-filter-input:focus {
+  background: #ffffff;
+  border-color: #0d9488;
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.18);
+}
+
+.col-filter-input.active-filter {
+  border-color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #38bdf8 !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="light"] .col-filter-input.active-filter {
+  border-color: #0d9488 !important;
+  background: #ccfbf1 !important;
+  color: #0f766e !important;
+  font-weight: 700 !important;
+}
+
+.col-filter-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.28rem 0.35rem;
+  font-size: 0.72rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(13, 148, 136, 0.4);
+  border-radius: 5px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .col-filter-select {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #99f6e4;
+}
+
+.col-filter-select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+
+[data-theme="light"] .col-filter-select:focus {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.18);
+}
+
+.col-filter-select.active-filter {
+  border-color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #38bdf8 !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="light"] .col-filter-select.active-filter {
+  border-color: #0d9488 !important;
+  background: #ccfbf1 !important;
+  color: #0f766e !important;
+  font-weight: 700 !important;
+}
+
+.th-sortable {
+  cursor: pointer !important;
+  user-select: none;
+  transition: all 0.18s ease;
+}
+
+.th-sortable:hover {
+  background: #0d2f44 !important;
+  color: #a7f3d0 !important;
+}
+
+[data-theme="light"] .th-sortable:hover {
+  background: #ccfbf1 !important;
+  color: #042f2e !important;
+}
+
+.sort-icon {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.72rem;
+  opacity: 0.45;
+  transition: all 0.2s ease;
+}
+
+.th-sortable:hover .sort-icon {
+  opacity: 0.85;
+}
+
+.sort-icon.active {
+  opacity: 1;
+  color: #38bdf8;
+  font-weight: 900;
+  transform: scale(1.15);
+}
+
+[data-theme="light"] .sort-icon.active {
+  color: #0d9488;
+}
+
+.btn-clear-col-filters {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.26rem 0.4rem;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-clear-col-filters:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+[data-theme="light"] .btn-clear-col-filters {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #f87171;
+}
+
+[data-theme="light"] .btn-clear-col-filters:hover {
+  background: #fecaca;
+  color: #b91c1c;
+}
+
+
 [data-theme="dark"] .text-kpi-pass {
   color: #34d399 !important;
 }
