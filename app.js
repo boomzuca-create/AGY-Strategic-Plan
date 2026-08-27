@@ -1435,7 +1435,7 @@ function renderOverviewStats() {
     else if (res.status === 'fail') { failCount++; evaluated++; }
   });
 
-  const passRate = evaluated > 0 ? ((passCount / evaluated) * 100).toFixed(1) : (ds.year === '69' ? '82.5' : '78.4');
+  const passRate = evaluated > 0 ? ((passCount / evaluated) * 100).toFixed(1) : '0.0';
 
   const elTotal = document.getElementById('stat-total-kpis');
   const elPassRate = document.getElementById('stat-pass-rate');
@@ -2332,7 +2332,7 @@ function renderExecutiveSummaryTab() {
   });
 
   const totalEvaluated = totalPass + totalFail;
-  const overallRate = totalEvaluated > 0 ? ((totalPass / totalEvaluated) * 100).toFixed(1) : '78.4';
+  const overallRate = totalEvaluated > 0 ? ((totalPass / totalEvaluated) * 100).toFixed(1) : '0.0';
   const passW = totalKpis > 0 ? (totalPass / totalKpis) * 100 : 0;
   const failW = totalKpis > 0 ? (totalFail / totalKpis) * 100 : 0;
 
