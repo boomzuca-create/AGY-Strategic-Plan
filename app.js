@@ -801,8 +801,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": null,
             "is_cup": false,
             "cup_code": null,
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/ปรับเปลี่ยนพฤติกรรม",
             "policy_sources": []
       },
       {
@@ -825,8 +825,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": "06 HL สุขภาพ",
             "is_cup": true,
             "cup_code": "K110",
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/HL ชุมชน",
             "policy_sources": [
                   1,
                   2,
@@ -936,8 +936,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": null,
             "is_cup": true,
             "cup_code": "K105",
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/อนามัยโรงเรียน",
             "policy_sources": [
                   3
             ]
@@ -990,8 +990,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": "01 อัตรามารดาตายไทย",
             "is_cup": false,
             "cup_code": null,
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/ANC",
             "policy_sources": [
                   1,
                   2
@@ -1017,8 +1017,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": "16 อัตราตายทารกแรกเกิด",
             "is_cup": true,
             "cup_code": "K102",
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/อนามัยแม่และเด็ก",
             "policy_sources": [
                   1,
                   2,
@@ -1045,8 +1045,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": null,
             "is_cup": true,
             "cup_code": "K106",
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/คัดกรองผู้สูงอายุ",
             "policy_sources": [
                   3
             ]
@@ -1156,8 +1156,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": "13 ค้นหาและรักษาวัณโรค",
             "is_cup": true,
             "cup_code": "K205",
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/ค้นหาวัณโรคชุมชน",
             "policy_sources": [
                   1,
                   2,
@@ -1299,8 +1299,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": "13 ค้นหาและรักษาวัณโรค",
             "is_cup": true,
             "cup_code": "K205",
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/DOTS ชุมชน",
             "policy_sources": [
                   1,
                   2,
@@ -1327,8 +1327,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": null,
             "is_cup": true,
             "cup_code": "K114",
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/คัดกรองพยาธิใบไม้ตับ",
             "policy_sources": [
                   3
             ]
@@ -1353,8 +1353,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": "22 อัตราฆ่าตัวตายสำเร็จ",
             "is_cup": true,
             "cup_code": "K201",
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/สุขภาพจิตชุมชน 2Q 9Q",
             "policy_sources": [
                   1,
                   2,
@@ -1490,8 +1490,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": null,
             "is_cup": true,
             "cup_code": "K204",
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/แพทย์แผนไทย IMC",
             "policy_sources": [
                   3
             ]
@@ -1516,8 +1516,8 @@ const OFFICIAL_DATASET = {
             "inspect_no": null,
             "is_cup": true,
             "cup_code": "K204",
-            "is_pao": false,
-            "pao_ref": null,
+            "is_pao": true,
+            "pao_ref": "รพ.สต.ถ่ายโอน/บริการแพทย์แผนไทย",
             "policy_sources": [
                   3
             ]
