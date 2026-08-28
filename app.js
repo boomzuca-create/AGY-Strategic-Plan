@@ -2269,6 +2269,102 @@ function handleSearchInputChange(val) {
   renderKPIList();
 }
 
+// Multi-Select Policy Filter Helpers
+function getSelectedPolicies() {
+  if (!AppState.columnFilters) return ['all'];
+  const pol = AppState.columnFilters.policy;
+  if (!pol || pol === 'all') return ['all'];
+  if (Array.isArray(pol)) return pol.length > 0 ? pol : ['all'];
+  return [pol];
+}
+
+function isPolicySelected(key) {
+  const selected = getSelectedPolicies();
+  if (key === 'all') return selected.includes('all') || selected.length === 0;
+  return selected.includes(key);
+}
+
+function getPolicyButtonLabelHtml() {
+  const selected = getSelectedPolicies();
+  if (selected.includes('all') || selected.length === 0) {
+    return '🌐 ทุกนโยบาย';
+  }
+  if (selected.includes('aligned')) {
+    return '✨ มีความสอดคล้อง';
+  }
+  if (selected.includes('none')) {
+    return '⚠️ ไม่มีข้อมูล';
+  }
+  
+  const tags = [];
+  if (selected.includes('moph')) tags.push('🏛️ กสธ.');
+  if (selected.includes('inspect')) tags.push('📋 ตรก.');
+  if (selected.includes('cup')) tags.push('🏥 CUP');
+  if (selected.includes('pao')) tags.push('🏢 อบจ.');
+  
+  if (tags.length === 0) return '🌐 ทุกนโยบาย';
+  if (tags.length === 1) return tags[0];
+  if (tags.length === 2) return tags.join(', ');
+  return `เลือก ${tags.length} นโยบาย`;
+}
+
+function togglePolicyFilter(key) {
+  if (!AppState.columnFilters) {
+    AppState.columnFilters = { id: '', name: '', policy: 'all', unit: 'all', baseline: '', target: '', actual: '', status: 'all' };
+  }
+  let current = getSelectedPolicies();
+
+  if (key === 'all') {
+    AppState.columnFilters.policy = 'all';
+  } else if (key === 'aligned') {
+    AppState.columnFilters.policy = current.includes('aligned') ? 'all' : 'aligned';
+  } else if (key === 'none') {
+    AppState.columnFilters.policy = current.includes('none') ? 'all' : 'none';
+  } else {
+    current = current.filter(k => k !== 'all' && k !== 'aligned' && k !== 'none');
+    if (current.includes(key)) {
+      current = current.filter(k => k !== key);
+    } else {
+      current.push(key);
+    }
+    if (current.length === 0) {
+      AppState.columnFilters.policy = 'all';
+    } else {
+      AppState.columnFilters.policy = current;
+    }
+  }
+
+  AppState.isPolicyDropdownOpen = true;
+  renderKPIList();
+}
+
+function selectAllPolicies() {
+  if (!AppState.columnFilters) {
+    AppState.columnFilters = { id: '', name: '', policy: 'all', unit: 'all', baseline: '', target: '', actual: '', status: 'all' };
+  }
+  AppState.columnFilters.policy = 'all';
+  AppState.isPolicyDropdownOpen = true;
+  renderKPIList();
+}
+
+function clearPolicyFilter() {
+  if (!AppState.columnFilters) {
+    AppState.columnFilters = { id: '', name: '', policy: 'all', unit: 'all', baseline: '', target: '', actual: '', status: 'all' };
+  }
+  AppState.columnFilters.policy = 'all';
+  AppState.isPolicyDropdownOpen = true;
+  renderKPIList();
+}
+
+function togglePolicyDropdown(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  AppState.isPolicyDropdownOpen = !AppState.isPolicyDropdownOpen;
+  renderKPIList();
+}
+
 // Column Filter & Sort Handlers
 function handleColumnFilterChange(colKey, val) {
   if (!AppState.columnFilters) {
@@ -2306,6 +2402,7 @@ function resetColumnFilters() {
     column: 'order',
     direction: 'asc'
   };
+  AppState.isPolicyDropdownOpen = false;
   renderKPIList();
 }
 
@@ -2369,6 +2466,17 @@ function setupEventListeners() {
   if (tableBtn) {
     tableBtn.addEventListener('click', () => setViewMode('table'));
   }
+
+  // Close policy multiselect dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('policy-multiselect-dropdown');
+    if (dropdown && AppState.isPolicyDropdownOpen) {
+      if (!dropdown.contains(e.target)) {
+        AppState.isPolicyDropdownOpen = false;
+        dropdown.classList.remove('open');
+      }
+    }
+  });
 
   document.querySelectorAll('.modal-close-btn, .modal-backdrop').forEach(el => {
     el.addEventListener('click', (e) => {
@@ -3207,27 +3315,28 @@ function getCurrentlyFilteredKPIs() {
       if (!nameStr.includes(qName)) return false;
     }
 
-    // --- คอลัมน์ที่ 3: กรองตามความสอดคล้องเชิงนโยบาย (Column Filter: Policy Alignment) ---
-    if (AppState.columnFilters.policy && AppState.columnFilters.policy !== 'all') {
-      const pol = AppState.columnFilters.policy.toLowerCase();
+    // --- คอลัมน์ที่ 3: กรองตามความสอดคล้องเชิงนโยบาย (Column Filter: Policy Alignment Multi-Select) ---
+    const polFilter = AppState.columnFilters.policy;
+    if (polFilter && polFilter !== 'all') {
+      const selectedPolicies = Array.isArray(polFilter) ? polFilter : [polFilter];
+      
       const isMoph = Boolean(kpi.is_moph || kpi.isMoph || kpi.moph);
       const isInspect = Boolean(kpi.is_inspect || kpi.isInspect || kpi.inspect);
       const isCup = Boolean(kpi.is_cup || kpi.isCup || kpi.cup || kpi.cup_code || kpi.cupCode);
       const isPao = Boolean(kpi.is_pao || kpi.isPao || kpi.pao);
       const hasAny = isMoph || isInspect || isCup || isPao;
 
-      if (pol === 'aligned' || pol === 'any') {
+      if (selectedPolicies.includes('aligned') || selectedPolicies.includes('any')) {
         if (!hasAny) return false;
-      } else if (pol === 'moph') {
-        if (!isMoph) return false;
-      } else if (pol === 'inspect') {
-        if (!isInspect) return false;
-      } else if (pol === 'cup') {
-        if (!isCup) return false;
-      } else if (pol === 'pao') {
-        if (!isPao) return false;
-      } else if (pol === 'none') {
+      } else if (selectedPolicies.includes('none')) {
         if (hasAny) return false;
+      } else {
+        let match = false;
+        if (selectedPolicies.includes('moph') && isMoph) match = true;
+        if (selectedPolicies.includes('inspect') && isInspect) match = true;
+        if (selectedPolicies.includes('cup') && isCup) match = true;
+        if (selectedPolicies.includes('pao') && isPao) match = true;
+        if (!match) return false;
       }
     }
 
@@ -3536,19 +3645,72 @@ function renderKPIList() {
                      onclick="event.stopPropagation()">
             </th>
 
-            <!-- 3. Filter: ความสอดคล้องเชิงนโยบาย -->
+            <!-- 3. Filter: ความสอดคล้องเชิงนโยบาย (Multi-Select Checkboxes) -->
             <th class="th-filter col-policy-align">
-              <select id="col-filter-select-policy" class="col-filter-select ${cf.policy !== 'all' ? 'active-filter' : ''}" 
-                      onchange="handleColumnFilterChange('policy', this.value)"
-                      onclick="event.stopPropagation()">
-                <option value="all" ${cf.policy === 'all' ? 'selected' : ''}>🌐 ทุกนโยบาย</option>
-                <option value="aligned" ${cf.policy === 'aligned' ? 'selected' : ''}>✨ มีความสอดคล้อง</option>
-                <option value="moph" ${cf.policy === 'moph' ? 'selected' : ''}>🏛️ กสธ.</option>
-                <option value="inspect" ${cf.policy === 'inspect' ? 'selected' : ''}>📋 ตรก.</option>
-                <option value="cup" ${cf.policy === 'cup' ? 'selected' : ''}>🏥 CUP</option>
-                <option value="pao" ${cf.policy === 'pao' ? 'selected' : ''}>🏢 อบจ.</option>
-                <option value="none" ${cf.policy === 'none' ? 'selected' : ''}>⚠️ ไม่มีข้อมูล</option>
-              </select>
+              <div class="custom-multiselect ${AppState.isPolicyDropdownOpen ? 'open' : ''}" id="policy-multiselect-dropdown" onclick="event.stopPropagation()">
+                <button type="button" class="multiselect-btn ${(!isPolicySelected('all') || getSelectedPolicies().length > 1) ? 'active-filter' : ''}" 
+                        onclick="togglePolicyDropdown(event)" title="คลิกเพื่อเลือกนโยบาย (สามารถเลือกได้หลายข้อพร้อมกัน)">
+                  <span class="multiselect-label">${getPolicyButtonLabelHtml()}</span>
+                  <span class="multiselect-arrow">▼</span>
+                </button>
+                <div class="multiselect-menu" id="policy-dropdown-menu" onclick="event.stopPropagation()">
+                  <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; padding: 0.1rem 0.3rem;">
+                    📌 เลือกความสอดคล้อง (ติ๊กเลือกได้หลายข้อ):
+                  </div>
+
+                  <!-- Option: ทั้งหมด -->
+                  <label class="multiselect-option" onclick="togglePolicyFilter('all')">
+                    <input type="checkbox" ${isPolicySelected('all') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('all')">
+                    <span>🌐 ทุกนโยบาย</span>
+                  </label>
+
+                  <!-- Option: มีความสอดคล้อง -->
+                  <label class="multiselect-option" onclick="togglePolicyFilter('aligned')">
+                    <input type="checkbox" ${isPolicySelected('aligned') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('aligned')">
+                    <span>✨ มีความสอดคล้อง</span>
+                  </label>
+
+                  <div class="multiselect-divider"></div>
+
+                  <!-- Option: กสธ. -->
+                  <label class="multiselect-option" onclick="togglePolicyFilter('moph')">
+                    <input type="checkbox" ${isPolicySelected('moph') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('moph')">
+                    <span><span class="align-badge align-badge-moph" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">🏛️ กสธ.</span> กระทรวงสาธารณสุข</span>
+                  </label>
+
+                  <!-- Option: ตรก. -->
+                  <label class="multiselect-option" onclick="togglePolicyFilter('inspect')">
+                    <input type="checkbox" ${isPolicySelected('inspect') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('inspect')">
+                    <span><span class="align-badge align-badge-inspect" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">📋 ตรก.</span> ตรวจราชการ</span>
+                  </label>
+
+                  <!-- Option: CUP -->
+                  <label class="multiselect-option" onclick="togglePolicyFilter('cup')">
+                    <input type="checkbox" ${isPolicySelected('cup') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('cup')">
+                    <span><span class="align-badge align-badge-cup" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">🏥 CUP</span> ระดับอำเภอ</span>
+                  </label>
+
+                  <!-- Option: อบจ. -->
+                  <label class="multiselect-option" onclick="togglePolicyFilter('pao')">
+                    <input type="checkbox" ${isPolicySelected('pao') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('pao')">
+                    <span><span class="align-badge align-badge-pao" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">🏢 อบจ.</span> ถ่ายโอน รพ.สต.</span>
+                  </label>
+
+                  <div class="multiselect-divider"></div>
+
+                  <!-- Option: ไม่มีข้อมูล -->
+                  <label class="multiselect-option" onclick="togglePolicyFilter('none')">
+                    <input type="checkbox" ${isPolicySelected('none') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('none')">
+                    <span>⚠️ ไม่มีข้อมูลสอดคล้อง</span>
+                  </label>
+
+                  <div class="multiselect-actions">
+                    <button type="button" class="multiselect-action-btn" onclick="selectAllPolicies()">เลือกทั้งหมด</button>
+                    <button type="button" class="multiselect-action-btn" onclick="clearPolicyFilter()">ล้าง</button>
+                    <button type="button" class="multiselect-action-btn" onclick="togglePolicyDropdown(event)" style="background: #0d9488; color: #fff;">ตกลง</button>
+                  </div>
+                </div>
+              </div>
             </th>
 
             <!-- 4. Filter: หน่วยวัด -->
@@ -10657,6 +10819,13 @@ window.handleSortColumn = handleSortColumn;
 window.resetColumnFilters = resetColumnFilters;
 window.resetAllKpiFilters = resetAllKpiFilters;
 window.renderKPIList = renderKPIList;
+window.togglePolicyFilter = togglePolicyFilter;
+window.togglePolicyDropdown = togglePolicyDropdown;
+window.selectAllPolicies = selectAllPolicies;
+window.clearPolicyFilter = clearPolicyFilter;
+window.getSelectedPolicies = getSelectedPolicies;
+window.isPolicySelected = isPolicySelected;
+
 
 
 // ============================================================================
