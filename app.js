@@ -3486,6 +3486,16 @@ function renderKPIList() {
     searchInput.value = AppState.searchQuery;
   }
 
+  // ซิงค์สถานะปุ่มและช่องติ๊กนโยบายบน Toolbar
+  const selectedPolicies = getSelectedPolicies();
+  ['moph', 'pao', 'inspect', 'cup'].forEach(key => {
+    const btn = document.getElementById(`pill-filter-${key}`);
+    const chk = document.getElementById(`chk-pill-${key}`);
+    const isAct = !selectedPolicies.includes('all') && selectedPolicies.includes(key);
+    if (btn) btn.classList.toggle('active', isAct);
+    if (chk) chk.checked = isAct;
+  });
+
   const filtered = getCurrentlyFilteredKPIs();
 
   const cf = AppState.columnFilters || { id: '', name: '', policy: 'all', unit: 'all', baseline: '', target: '', actual: '', status: 'all' };

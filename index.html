@@ -6,7 +6,7 @@
   <title>ระบบรายงาน แผนยุทธศาสตร์สาธารณสุข จังหวัดขอนแก่น ระยะ 5 ปี (2566–2570)</title>
   <meta name="description" content="ระบบรายงาน แผนยุทธศาสตร์สาธารณสุข จังหวัดขอนแก่น ระยะ 5 ปี (2566–2570) พร้อม AI Prediction Engine">
   <link rel="icon" type="image/png" href="moph-logo.png">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260828_02">
   <!-- Chart.js CDN for Modern Healthcare Visualizations -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Supabase JS Client for Real-time Cloud Database -->
@@ -479,6 +479,27 @@
                 <option value="pending">🟡 รอประมวลผล / ยังไม่มีข้อมูล</option>
               </select>
 
+              <!-- Policy Alignment Quick Pill Filters -->
+              <div class="policy-quick-filters" id="policy-quick-filters-toolbar" style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; background: rgba(13, 148, 136, 0.08); padding: 0.25rem 0.45rem; border-radius: 6px; border: 1px solid rgba(13, 148, 136, 0.25);">
+                <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">🔗 ความเชื่อมโยง:</span>
+                <button type="button" class="policy-pill-btn" id="pill-filter-moph" onclick="togglePolicyFilter('moph')" title="ติ๊กเพื่อดู กสธ.">
+                  <input type="checkbox" id="chk-pill-moph" style="pointer-events: none; width: 13px; height: 13px; margin: 0;">
+                  <span>🏛️ กสธ.</span>
+                </button>
+                <button type="button" class="policy-pill-btn" id="pill-filter-pao" onclick="togglePolicyFilter('pao')" title="ติ๊กเพื่อดู อบจ.">
+                  <input type="checkbox" id="chk-pill-pao" style="pointer-events: none; width: 13px; height: 13px; margin: 0;">
+                  <span>🏢 อบจ.</span>
+                </button>
+                <button type="button" class="policy-pill-btn" id="pill-filter-inspect" onclick="togglePolicyFilter('inspect')" title="ติ๊กเพื่อดู ตรก.">
+                  <input type="checkbox" id="chk-pill-inspect" style="pointer-events: none; width: 13px; height: 13px; margin: 0;">
+                  <span>📋 ตรก.</span>
+                </button>
+                <button type="button" class="policy-pill-btn" id="pill-filter-cup" onclick="togglePolicyFilter('cup')" title="ติ๊กเพื่อดู CUP">
+                  <input type="checkbox" id="chk-pill-cup" style="pointer-events: none; width: 13px; height: 13px; margin: 0;">
+                  <span>🏥 CUP</span>
+                </button>
+              </div>
+
               <button class="btn btn-secondary btn-sm" id="btn-reset-filters" onclick="resetAllKpiFilters()" title="ล้างตัวกรองทั้งหมด" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">
                 🔄 ล้างตัวกรอง
               </button>
@@ -835,7 +856,7 @@
 
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=20260828_02"></script>
     <!-- Modal: Full KPI Template Specification Document -->
     <div class="modal-backdrop" id="kpi-full-template-modal">
       <div class="modal-dialog modal-full-template-dialog" id="kpi-full-template-dialog">
