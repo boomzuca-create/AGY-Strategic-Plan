@@ -2304,8 +2304,14 @@ function getPolicyButtonLabelHtml() {
   
   if (tags.length === 0) return '🌐 ทุกนโยบาย';
   if (tags.length === 1) return tags[0];
-  if (tags.length === 2) return tags.join(', ');
-  return `เลือก ${tags.length} นโยบาย`;
+  const modeLabel = AppState.policyMatchMode === 'all' ? ' (ตรงทุกข้อ)' : '';
+  return `เลือก ${tags.length} นโยบาย${modeLabel}: ${tags.join(', ')}`;
+}
+
+function setPolicyMatchMode(mode) {
+  AppState.policyMatchMode = mode === 'all' ? 'all' : 'any';
+  AppState.isPolicyDropdownOpen = true;
+  renderKPIList();
 }
 
 function togglePolicyFilter(key) {
@@ -2342,7 +2348,7 @@ function selectAllPolicies() {
   if (!AppState.columnFilters) {
     AppState.columnFilters = { id: '', name: '', policy: 'all', unit: 'all', baseline: '', target: '', actual: '', status: 'all' };
   }
-  AppState.columnFilters.policy = 'all';
+  AppState.columnFilters.policy = ['moph', 'inspect', 'cup', 'pao'];
   AppState.isPolicyDropdownOpen = true;
   renderKPIList();
 }
@@ -3331,12 +3337,22 @@ function getCurrentlyFilteredKPIs() {
       } else if (selectedPolicies.includes('none')) {
         if (hasAny) return false;
       } else {
-        let match = false;
-        if (selectedPolicies.includes('moph') && isMoph) match = true;
-        if (selectedPolicies.includes('inspect') && isInspect) match = true;
-        if (selectedPolicies.includes('cup') && isCup) match = true;
-        if (selectedPolicies.includes('pao') && isPao) match = true;
-        if (!match) return false;
+        const mode = AppState.policyMatchMode || 'any';
+        if (mode === 'all' && selectedPolicies.length > 1) {
+          // AND mode: KPI must have ALL selected policies
+          if (selectedPolicies.includes('moph') && !isMoph) return false;
+          if (selectedPolicies.includes('inspect') && !isInspect) return false;
+          if (selectedPolicies.includes('cup') && !isCup) return false;
+          if (selectedPolicies.includes('pao') && !isPao) return false;
+        } else {
+          // OR mode: KPI must have AT LEAST ONE of selected policies
+          let match = false;
+          if (selectedPolicies.includes('moph') && isMoph) match = true;
+          if (selectedPolicies.includes('inspect') && isInspect) match = true;
+          if (selectedPolicies.includes('cup') && isCup) match = true;
+          if (selectedPolicies.includes('pao') && isPao) match = true;
+          if (!match) return false;
+        }
       }
     }
 
@@ -3649,63 +3665,76 @@ function renderKPIList() {
             <th class="th-filter col-policy-align">
               <div class="custom-multiselect ${AppState.isPolicyDropdownOpen ? 'open' : ''}" id="policy-multiselect-dropdown" onclick="event.stopPropagation()">
                 <button type="button" class="multiselect-btn ${(!isPolicySelected('all') || getSelectedPolicies().length > 1) ? 'active-filter' : ''}" 
-                        onclick="togglePolicyDropdown(event)" title="คลิกเพื่อเลือกนโยบาย (สามารถเลือกได้หลายข้อพร้อมกัน)">
+                        onclick="togglePolicyDropdown(event)" title="คลิกเพื่อเลือกความเชื่อมโยงทางนโยบาย (สามารถเลือกได้หลายข้อพร้อมกัน)">
                   <span class="multiselect-label">${getPolicyButtonLabelHtml()}</span>
                   <span class="multiselect-arrow">▼</span>
                 </button>
                 <div class="multiselect-menu" id="policy-dropdown-menu" onclick="event.stopPropagation()">
-                  <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; padding: 0.1rem 0.3rem;">
-                    📌 เลือกความสอดคล้อง (ติ๊กเลือกได้หลายข้อ):
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; padding: 0.1rem 0.2rem;">
+                    <span style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">📌 เลือกนโยบาย (เลือกหลายข้อได้):</span>
+                    <span style="font-size: 0.65rem; color: #38bdf8; font-weight: 600;">เลือกแล้ว ${getSelectedPolicies().includes('all') ? 'ทั้งหมด' : getSelectedPolicies().length + ' ข้อ'}</span>
+                  </div>
+
+                  <!-- Mode Toggle: OR vs AND -->
+                  <div style="display: flex; gap: 0.25rem; margin-bottom: 0.4rem; padding: 0.2rem; background: rgba(13, 148, 136, 0.12); border-radius: 4px; font-size: 0.66rem;">
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.2rem; flex: 1;">
+                      <input type="radio" name="policy_mode" value="any" ${AppState.policyMatchMode !== 'all' ? 'checked' : ''} onchange="setPolicyMatchMode('any')">
+                      <span>อย่างน้อย 1 ข้อ (OR)</span>
+                    </label>
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.2rem; flex: 1;">
+                      <input type="radio" name="policy_mode" value="all" ${AppState.policyMatchMode === 'all' ? 'checked' : ''} onchange="setPolicyMatchMode('all')">
+                      <span>ครบทุกข้อ (AND)</span>
+                    </label>
                   </div>
 
                   <!-- Option: ทั้งหมด -->
-                  <label class="multiselect-option" onclick="togglePolicyFilter('all')">
-                    <input type="checkbox" ${isPolicySelected('all') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('all')">
+                  <label class="multiselect-option">
+                    <input type="checkbox" ${isPolicySelected('all') ? 'checked' : ''} onchange="togglePolicyFilter('all')">
                     <span>🌐 ทุกนโยบาย</span>
                   </label>
 
                   <!-- Option: มีความสอดคล้อง -->
-                  <label class="multiselect-option" onclick="togglePolicyFilter('aligned')">
-                    <input type="checkbox" ${isPolicySelected('aligned') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('aligned')">
-                    <span>✨ มีความสอดคล้อง</span>
+                  <label class="multiselect-option">
+                    <input type="checkbox" ${isPolicySelected('aligned') ? 'checked' : ''} onchange="togglePolicyFilter('aligned')">
+                    <span>✨ มีความสอดคล้อง (อย่างน้อย 1 หน่วยงาน)</span>
                   </label>
 
                   <div class="multiselect-divider"></div>
 
                   <!-- Option: กสธ. -->
-                  <label class="multiselect-option" onclick="togglePolicyFilter('moph')">
-                    <input type="checkbox" ${isPolicySelected('moph') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('moph')">
-                    <span><span class="align-badge align-badge-moph" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">🏛️ กสธ.</span> กระทรวงสาธารณสุข</span>
+                  <label class="multiselect-option">
+                    <input type="checkbox" ${isPolicySelected('moph') ? 'checked' : ''} onchange="togglePolicyFilter('moph')">
+                    <span><span class="align-badge align-badge-moph" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">🏛️ กสธ.</span> แผนแม่บทกระทรวงสาธารณสุข</span>
                   </label>
 
                   <!-- Option: ตรก. -->
-                  <label class="multiselect-option" onclick="togglePolicyFilter('inspect')">
-                    <input type="checkbox" ${isPolicySelected('inspect') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('inspect')">
-                    <span><span class="align-badge align-badge-inspect" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">📋 ตรก.</span> ตรวจราชการ</span>
+                  <label class="multiselect-option">
+                    <input type="checkbox" ${isPolicySelected('inspect') ? 'checked' : ''} onchange="togglePolicyFilter('inspect')">
+                    <span><span class="align-badge align-badge-inspect" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">📋 ตรก.</span> ประเด็นตรวจราชการเขต</span>
                   </label>
 
                   <!-- Option: CUP -->
-                  <label class="multiselect-option" onclick="togglePolicyFilter('cup')">
-                    <input type="checkbox" ${isPolicySelected('cup') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('cup')">
-                    <span><span class="align-badge align-badge-cup" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">🏥 CUP</span> ระดับอำเภอ</span>
+                  <label class="multiselect-option">
+                    <input type="checkbox" ${isPolicySelected('cup') ? 'checked' : ''} onchange="togglePolicyFilter('cup')">
+                    <span><span class="align-badge align-badge-cup" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">🏥 CUP</span> เกณฑ์นิเทศระดับอำเภอ</span>
                   </label>
 
                   <!-- Option: อบจ. -->
-                  <label class="multiselect-option" onclick="togglePolicyFilter('pao')">
-                    <input type="checkbox" ${isPolicySelected('pao') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('pao')">
-                    <span><span class="align-badge align-badge-pao" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">🏢 อบจ.</span> ถ่ายโอน รพ.สต.</span>
+                  <label class="multiselect-option">
+                    <input type="checkbox" ${isPolicySelected('pao') ? 'checked' : ''} onchange="togglePolicyFilter('pao')">
+                    <span><span class="align-badge align-badge-pao" style="padding: 1px 6px; font-size: 0.68rem; margin-right: 3px;">🏢 อบจ.</span> ถ่ายโอน รพ.สต. สู่ อบจ.</span>
                   </label>
 
                   <div class="multiselect-divider"></div>
 
                   <!-- Option: ไม่มีข้อมูล -->
-                  <label class="multiselect-option" onclick="togglePolicyFilter('none')">
-                    <input type="checkbox" ${isPolicySelected('none') ? 'checked' : ''} onclick="event.stopPropagation(); togglePolicyFilter('none')">
-                    <span>⚠️ ไม่มีข้อมูลสอดคล้อง</span>
+                  <label class="multiselect-option">
+                    <input type="checkbox" ${isPolicySelected('none') ? 'checked' : ''} onchange="togglePolicyFilter('none')">
+                    <span>⚠️ ไม่มีข้อมูลความเชื่อมโยง</span>
                   </label>
 
                   <div class="multiselect-actions">
-                    <button type="button" class="multiselect-action-btn" onclick="selectAllPolicies()">เลือกทั้งหมด</button>
+                    <button type="button" class="multiselect-action-btn" onclick="selectAllPolicies()">เลือก 4 นโยบาย</button>
                     <button type="button" class="multiselect-action-btn" onclick="clearPolicyFilter()">ล้าง</button>
                     <button type="button" class="multiselect-action-btn" onclick="togglePolicyDropdown(event)" style="background: #0d9488; color: #fff;">ตกลง</button>
                   </div>
@@ -10825,6 +10854,7 @@ window.selectAllPolicies = selectAllPolicies;
 window.clearPolicyFilter = clearPolicyFilter;
 window.getSelectedPolicies = getSelectedPolicies;
 window.isPolicySelected = isPolicySelected;
+window.setPolicyMatchMode = setPolicyMatchMode;
 
 
 
