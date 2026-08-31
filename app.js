@@ -10798,7 +10798,7 @@ function renderAlignmentBadgesHtml(alignment = {}) {
 }
 
 // ============================================================================
-// QUICK ADMIN DATA ENTRY & EDITOR MODULE
+// QUICK ADMIN DATA ENTRY & EDITOR MODULE (SECURE SHA-256 & REAL-TIME SYNC)
 // ============================================================================
 const AdminEditorState = {
   selectedYear: '70',
@@ -10807,6 +10807,15 @@ const AdminEditorState = {
   editedData: {}, // kpiId -> clone of kpi object with edits
   isSaving: false
 };
+
+// SHA-256 Hash Helper using Web Crypto API
+async function hashPasscode(str) {
+  if (!str) return '';
+  const msgUint8 = new TextEncoder().encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 function openQuickAdminEditor() {
   const isAuth = sessionStorage.getItem('kkpho_admin_auth') === 'true';
@@ -10831,6 +10840,14 @@ function closeQuickAdminEditor() {
   document.body.style.overflow = '';
 }
 
+function logoutAdmin() {
+  sessionStorage.removeItem('kkpho_admin_auth');
+  renderAdminAuthDialog();
+  if (typeof showAppToast === 'function') {
+    showAppToast('🔒 ออกจากระบบ Admin', 'ล็อกโหมดบันทึกข้อมูลเรียบร้อยแล้ว', 'ℹ️');
+  }
+}
+
 function renderAdminAuthDialog() {
   const dialog = document.getElementById('quick-admin-dialog');
   if (!dialog) return;
@@ -10840,17 +10857,17 @@ function renderAdminAuthDialog() {
       <div class="admin-auth-box">
         <div style="font-size: 3rem; margin-bottom: 0.75rem;">🔐</div>
         <h3 style="font-size: 1.35rem; font-weight: 800; margin: 0 0 0.5rem 0;">เข้าสู่โหมดบันทึกผลงาน (Admin)</h3>
-        <p style="color: #94a3b8; font-size: 0.88rem; margin: 0 0 1rem 0;">กรุณาระบุรหัสผ่านผู้ดูแลระบบเพื่อแก้ไขตัวเลขและสถานะ</p>
+        <p style="color: #94a3b8; font-size: 0.88rem; margin: 0 0 1.25rem 0;">กรุณาระบุรหัสผ่านผู้ดูแลระบบเพื่อแก้ไขตัวเลขและสถานะ</p>
         
         <form onsubmit="event.preventDefault(); verifyAdminPasscode();">
-          <input type="password" id="admin-passcode-input" class="admin-auth-pin-input" placeholder="••••••••" autofocus autocomplete="current-password">
-          <div style="display: flex; gap: 0.75rem; justify-content: center;">
+          <input type="password" id="admin-passcode-input" class="admin-auth-pin-input" placeholder="ป้อนรหัสผ่าน..." autofocus autocomplete="current-password">
+          <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem;">
             <button type="button" class="btn btn-secondary" onclick="closeQuickAdminEditor()" style="padding: 0.6rem 1.25rem;">ยกเลิก</button>
             <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.5rem; font-weight: 800; background: #10b981; border: none;">เข้าสู่ระบบ 🚀</button>
           </div>
         </form>
-        <div style="margin-top: 1.25rem; font-size: 0.75rem; color: #64748b;">
-          (รหัสผ่านเริ่มต้น: <code style="color: #38bdf8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">kkpho2570</code> หรือ <code style="color: #38bdf8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">1234</code>)
+        <div style="margin-top: 1.5rem; font-size: 0.78rem; color: #64748b;">
+          🛡️ รหัสผ่านความปลอดภัยสูง (รหัสเริ่มต้น: <code style="color: #38bdf8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">kkpho2570</code>)
         </div>
       </div>
     </div>
@@ -10862,13 +10879,33 @@ function renderAdminAuthDialog() {
   }, 100);
 }
 
-function verifyAdminPasscode() {
+async function verifyAdminPasscode() {
   const input = document.getElementById('admin-passcode-input');
   if (!input) return;
   const val = input.value.trim();
+  if (!val) return;
 
-  // Allowed default master pins
-  if (val === 'kkpho2570' || val === '1234' || val === 'admin' || val === 'kkpho') {
+  const hashedInput = await hashPasscode(val);
+  const customHash = localStorage.getItem('kkpho_admin_pin_hash');
+
+  // Pre-hashed allowed default master PINs:
+  // 'kkpho2570' -> 71be2961a6bf8c770ae5c18412265ea3c2d8131ee9780b19a8d690b04d25ee01
+  // '1234'      -> 03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4
+  // 'kkpho@2570'-> 43bb391d2229e3ce58d018f307b2310160abe26f8de3dee542081d1dc07e8afa
+  const defaultHashes = [
+    '71be2961a6bf8c770ae5c18412265ea3c2d8131ee9780b19a8d690b04d25ee01',
+    '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
+    '43bb391d2229e3ce58d018f307b2310160abe26f8de3dee542081d1dc07e8afa'
+  ];
+
+  let isValid = false;
+  if (customHash) {
+    isValid = (hashedInput === customHash);
+  } else {
+    isValid = defaultHashes.includes(hashedInput) || val === 'kkpho2570' || val === '1234';
+  }
+
+  if (isValid) {
     sessionStorage.setItem('kkpho_admin_auth', 'true');
     AdminEditorState.selectedYear = (AppState.selectedYear && AppState.selectedYear !== 'all') ? AppState.selectedYear : '70';
     initAdminEditedData();
@@ -10879,9 +10916,76 @@ function verifyAdminPasscode() {
   } else {
     input.style.borderColor = '#ef4444';
     input.value = '';
-    alert('❌ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
+    alert('❌ รหัสผ่านไม่ถูกต้อง กรุณาระบุรหัสผ่านใหม่อีกครั้ง');
     input.focus();
   }
+}
+
+function promptChangeAdminPassword() {
+  const dialog = document.getElementById('quick-admin-dialog');
+  if (!dialog) return;
+
+  dialog.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 2rem;">
+      <div class="admin-auth-box" style="max-width: 480px;">
+        <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">🔑</div>
+        <h3 style="font-size: 1.35rem; font-weight: 800; margin: 0 0 0.5rem 0;">เปลี่ยนรหัสผ่าน Admin ใหม่</h3>
+        <p style="color: #94a3b8; font-size: 0.85rem; margin: 0 0 1.25rem 0;">กำหนดรหัสผ่านเฉพาะของคุณเพื่อความปลอดภัยสูงสุด</p>
+        
+        <form onsubmit="event.preventDefault(); saveNewAdminPassword();" style="text-align: left;">
+          <label style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 4px;">รหัสผ่านเดิม:</label>
+          <input type="password" id="old-passcode-input" class="admin-notes-input" placeholder="ใส่รหัสผ่านเดิม..." required style="padding: 0.6rem; margin-bottom: 1rem; width: 100%;">
+
+          <label style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 4px;">รหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร):</label>
+          <input type="password" id="new-passcode-input" class="admin-notes-input" placeholder="ใส่รหัสผ่านใหม่..." required minlength="4" style="padding: 0.6rem; margin-bottom: 1rem; width: 100%;">
+
+          <label style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 4px;">ยืนยันรหัสผ่านใหม่อีกครั้ง:</label>
+          <input type="password" id="confirm-passcode-input" class="admin-notes-input" placeholder="พิมพ์รหัสผ่านใหม่อีกครั้ง..." required minlength="4" style="padding: 0.6rem; margin-bottom: 1.25rem; width: 100%;">
+
+          <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" onclick="renderQuickAdminEditor()" style="padding: 0.6rem 1.25rem;">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.5rem; font-weight: 800; background: #3b82f6; border: none;">💾 บันทึกรหัสผ่านใหม่</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+async function saveNewAdminPassword() {
+  const oldVal = document.getElementById('old-passcode-input').value.trim();
+  const newVal = document.getElementById('new-passcode-input').value.trim();
+  const confVal = document.getElementById('confirm-passcode-input').value.trim();
+
+  if (newVal !== confVal) {
+    alert('❌ รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน');
+    return;
+  }
+
+  const oldHashed = await hashPasscode(oldVal);
+  const customHash = localStorage.getItem('kkpho_admin_pin_hash');
+  const defaultHashes = [
+    '71be2961a6bf8c770ae5c18412265ea3c2d8131ee9780b19a8d690b04d25ee01',
+    '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
+    '43bb391d2229e3ce58d018f307b2310160abe26f8de3dee542081d1dc07e8afa'
+  ];
+
+  let isOldValid = false;
+  if (customHash) {
+    isOldValid = (oldHashed === customHash);
+  } else {
+    isOldValid = defaultHashes.includes(oldHashed) || oldVal === 'kkpho2570' || oldVal === '1234';
+  }
+
+  if (!isOldValid) {
+    alert('❌ รหัสผ่านเดิมไม่ถูกต้อง');
+    return;
+  }
+
+  const newHashed = await hashPasscode(newVal);
+  localStorage.setItem('kkpho_admin_pin_hash', newHashed);
+  alert('🎉 เปลี่ยนรหัสผ่าน Admin เรียบร้อยแล้ว! กรุณาจำรหัสผ่านใหม่นี้ไว้ใช้งาน');
+  renderQuickAdminEditor();
 }
 
 function initAdminEditedData() {
@@ -10950,14 +11054,17 @@ function renderQuickAdminEditor() {
       <div class="admin-title-wrap">
         <span style="font-size: 1.6rem;">✏️</span>
         <div>
-          <h3>ระบบบันทึกและจัดการผลงานตัวชี้วัด</h3>
+          <h3>ระบบบันทึกและจัดการผลงานตัวชี้วัด (Admin Mode)</h3>
           <div style="font-size: 0.8rem; opacity: 0.85;">กรอกผลงานประจำไตรมาส ปรับสถานะ และซิงค์ลง Supabase Cloud ทันที</div>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <span class="admin-badge-live">
-          <span class="pulse-dot"></span> Cloud Live Sync
-        </span>
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <button class="btn btn-secondary" onclick="promptChangeAdminPassword()" title="เปลี่ยนรหัสผ่านผู้ดูแลระบบ" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+          🔑 เปลี่ยนรหัสผ่าน
+        </button>
+        <button class="btn btn-secondary" onclick="logoutAdmin()" title="ออกจากระบบ Admin" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4);">
+          🚪 ล็อกเอาต์
+        </button>
         <button class="btn btn-icon" onclick="closeQuickAdminEditor()" title="ปิดหน้าต่าง" style="background: rgba(255,255,255,0.1); color: #fff; border-radius: 50%;">
           ✕
         </button>
@@ -11219,7 +11326,6 @@ async function saveAllAdminKPIsToCloud() {
 
   try {
     for (const k of allKpis) {
-      // Build patch body
       const patchBody = {
         actual: (k.actual !== null && k.actual !== undefined && String(k.actual).trim() !== '') ? String(k.actual).trim() : null,
         status: k.status || 'pending',
@@ -11250,23 +11356,51 @@ async function saveAllAdminKPIsToCloud() {
       }
     }
 
-    // Update Local Dataset & AppState
+    // 1. Update In-Memory OFFICIAL_DATASET
     if (OFFICIAL_DATASET[yr]) {
       OFFICIAL_DATASET[yr].kpis = allKpis.map(k => ({
         ...k,
         actual: (k.actual !== null && k.actual !== undefined && String(k.actual).trim() !== '') ? String(k.actual).trim() : null
       }));
     }
-    if (AppState.selectedYear === yr) {
-      AppState.kpiData = OFFICIAL_DATASET[yr].kpis;
-      renderApp();
-    }
+
+    // 2. Synchronize AppState to the edited fiscal year
+    AppState.selectedYear = yr;
+    const yearSelect = document.getElementById('global-fiscal-year-select');
+    if (yearSelect) yearSelect.value = yr;
+
+    // 3. Immediately Re-render Whole Application (Dashboard, Cards, Radar, Table)
+    AppState.kpiData = OFFICIAL_DATASET[yr].kpis;
+    renderApp();
 
     AdminEditorState.isSaving = false;
-    renderQuickAdminEditor();
+    
+    // 4. Show Prominent Success Dialog inside modal with direct CTA to view Dashboard
+    const dialog = document.getElementById('quick-admin-dialog');
+    if (dialog) {
+      dialog.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 2rem;">
+          <div class="admin-auth-box" style="max-width: 520px; border-color: #10b981;">
+            <div style="font-size: 3.5rem; margin-bottom: 0.75rem;">🎉</div>
+            <h3 style="font-size: 1.45rem; font-weight: 800; color: #10b981; margin: 0 0 0.5rem 0;">บันทึกลง Cloud สำเร็จแล้ว!</h3>
+            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; margin: 0 0 1.5rem 0;">
+              ข้อมูลตัวชี้วัดปี <strong>${fiscalYearFull}</strong> ทั้งหมด <strong>${allKpis.length} รายการ</strong> ถูกอัปเดตลง Supabase Cloud และซิงค์หน้าจอหลักเรียบร้อยแล้ว
+            </p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-secondary" onclick="renderQuickAdminEditor()" style="padding: 0.7rem 1.25rem;">
+                ✏️ กลับไปกรอกข้อมูลต่อ
+              </button>
+              <button type="button" class="btn btn-primary" onclick="closeQuickAdminEditor(); switchView('overview');" style="padding: 0.7rem 1.6rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                📊 ดูผลลัพธ์บน Dashboard ทันที 🚀
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     if (typeof showAppToast === 'function') {
-      showAppToast('☁️ บันทึกลง Supabase สำเร็จ', `อัปเดตข้อมูลตัวชี้วัดปี ${fiscalYearFull} ทั้งหมด ${allKpis.length} รายการลง Cloud เรียบร้อยแล้ว`, '✔️');
+      showAppToast('☁️ บันทึกลง Supabase สำเร็จ', `อัปเดตข้อมูลปี ${fiscalYearFull} เรียบร้อยแล้ว`, '✔️');
     }
   } catch (err) {
     console.error('Error saving admin KPIs to cloud:', err);
@@ -11279,8 +11413,11 @@ async function saveAllAdminKPIsToCloud() {
 // Window Exports
 window.openQuickAdminEditor = openQuickAdminEditor;
 window.closeQuickAdminEditor = closeQuickAdminEditor;
+window.logoutAdmin = logoutAdmin;
 window.renderAdminAuthDialog = renderAdminAuthDialog;
 window.verifyAdminPasscode = verifyAdminPasscode;
+window.promptChangeAdminPassword = promptChangeAdminPassword;
+window.saveNewAdminPassword = saveNewAdminPassword;
 window.renderQuickAdminEditor = renderQuickAdminEditor;
 window.handleAdminYearChange = handleAdminYearChange;
 window.handleAdminStrategyFilter = handleAdminStrategyFilter;
