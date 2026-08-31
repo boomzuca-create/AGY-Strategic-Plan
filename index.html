@@ -6,7 +6,7 @@
   <title>ระบบรายงาน แผนยุทธศาสตร์สาธารณสุข จังหวัดขอนแก่น ระยะ 5 ปี (2566–2570)</title>
   <meta name="description" content="ระบบรายงาน แผนยุทธศาสตร์สาธารณสุข จังหวัดขอนแก่น ระยะ 5 ปี (2566–2570) พร้อม AI Prediction Engine">
   <link rel="icon" type="image/png" href="moph-logo.png">
-  <link rel="stylesheet" href="style.css?v=20260828_05">
+  <link rel="stylesheet" href="style.css?v=20260831_01">
   <!-- Chart.js CDN for Modern Healthcare Visualizations -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Supabase JS Client for Real-time Cloud Database -->
@@ -74,6 +74,12 @@
           <span class="nav-item-icon">🚀</span>
           <span class="nav-item-text">ร่างโครงการด้วย Gem (AI)</span>
           <span class="badge-ai-new" style="background: linear-gradient(135deg, #3b82f6, #6366f1); color: #fff;">Gem</span>
+        </button>
+
+        <button class="nav-item nav-item-admin" onclick="openQuickAdminEditor()">
+          <span class="nav-item-icon">✏️</span>
+          <span class="nav-item-text">บันทึกผลงาน (Admin)</span>
+          <span class="badge-ai-new" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff;">Fast</span>
         </button>
 
         <button class="nav-item" data-view="settings" onclick="switchView('settings')">
@@ -146,6 +152,15 @@
             <div class="pulse-dot"></div>
             <span class="sync-text">อัพเดทข้อมูล 20/08/69 เวลา 12.28 น.</span>
           </div>
+
+          <!-- Quick Action: Quick Admin Data Entry -->
+          <button class="btn btn-primary btn-header-quick btn-admin-quick" onclick="openQuickAdminEditor()" title="บันทึกผลการดำเนินงาน / จัดการข้อมูลตัวชี้วัด (Admin Quick Entry)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            <span>บันทึกผลงาน</span>
+          </button>
 
           <!-- Quick Action: Export PDF Report -->
           <button class="btn btn-secondary btn-header-quick" onclick="printOnePageLandscapeReport()" title="พิมพ์รายงานสรุปผลการดำเนินงาน (One Page 16:9 แนวนอน)">
@@ -856,11 +871,18 @@
 
   </div>
 
-  <script src="app.js?v=20260828_05"></script>
+  <script src="app.js?v=20260831_01"></script>
     <!-- Modal: Full KPI Template Specification Document -->
     <div class="modal-backdrop" id="kpi-full-template-modal">
       <div class="modal-dialog modal-full-template-dialog" id="kpi-full-template-dialog">
         <!-- Rendered dynamically by openFullKPITemplateModal in app.js -->
+      </div>
+    </div>
+
+    <!-- Modal: Quick Admin Data Entry Dialog -->
+    <div class="modal-backdrop" id="quick-admin-modal">
+      <div class="modal-dialog modal-admin-dialog" id="quick-admin-dialog">
+        <!-- Rendered dynamically by renderQuickAdminEditor in app.js -->
       </div>
     </div>
 </body>

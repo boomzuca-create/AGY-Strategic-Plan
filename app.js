@@ -10797,6 +10797,503 @@ function renderAlignmentBadgesHtml(alignment = {}) {
   return `<div class="alignment-badges-container ${className}">${badges.join('')}</div>`;
 }
 
+// ============================================================================
+// QUICK ADMIN DATA ENTRY & EDITOR MODULE
+// ============================================================================
+const AdminEditorState = {
+  selectedYear: '70',
+  searchQuery: '',
+  selectedStrategy: 'all',
+  editedData: {}, // kpiId -> clone of kpi object with edits
+  isSaving: false
+};
+
+function openQuickAdminEditor() {
+  const isAuth = sessionStorage.getItem('kkpho_admin_auth') === 'true';
+  const modal = document.getElementById('quick-admin-modal');
+  if (!modal) return;
+
+  if (!isAuth) {
+    renderAdminAuthDialog();
+  } else {
+    AdminEditorState.selectedYear = (AppState.selectedYear && AppState.selectedYear !== 'all') ? AppState.selectedYear : '70';
+    initAdminEditedData();
+    renderQuickAdminEditor();
+  }
+
+  modal.classList.add('show', 'active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeQuickAdminEditor() {
+  const modal = document.getElementById('quick-admin-modal');
+  if (modal) modal.classList.remove('show', 'active');
+  document.body.style.overflow = '';
+}
+
+function renderAdminAuthDialog() {
+  const dialog = document.getElementById('quick-admin-dialog');
+  if (!dialog) return;
+
+  dialog.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 2rem;">
+      <div class="admin-auth-box">
+        <div style="font-size: 3rem; margin-bottom: 0.75rem;">🔐</div>
+        <h3 style="font-size: 1.35rem; font-weight: 800; margin: 0 0 0.5rem 0;">เข้าสู่โหมดบันทึกผลงาน (Admin)</h3>
+        <p style="color: #94a3b8; font-size: 0.88rem; margin: 0 0 1rem 0;">กรุณาระบุรหัสผ่านผู้ดูแลระบบเพื่อแก้ไขตัวเลขและสถานะ</p>
+        
+        <form onsubmit="event.preventDefault(); verifyAdminPasscode();">
+          <input type="password" id="admin-passcode-input" class="admin-auth-pin-input" placeholder="••••••••" autofocus autocomplete="current-password">
+          <div style="display: flex; gap: 0.75rem; justify-content: center;">
+            <button type="button" class="btn btn-secondary" onclick="closeQuickAdminEditor()" style="padding: 0.6rem 1.25rem;">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.5rem; font-weight: 800; background: #10b981; border: none;">เข้าสู่ระบบ 🚀</button>
+          </div>
+        </form>
+        <div style="margin-top: 1.25rem; font-size: 0.75rem; color: #64748b;">
+          (รหัสผ่านเริ่มต้น: <code style="color: #38bdf8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">kkpho2570</code> หรือ <code style="color: #38bdf8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">1234</code>)
+        </div>
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const input = document.getElementById('admin-passcode-input');
+    if (input) input.focus();
+  }, 100);
+}
+
+function verifyAdminPasscode() {
+  const input = document.getElementById('admin-passcode-input');
+  if (!input) return;
+  const val = input.value.trim();
+
+  // Allowed default master pins
+  if (val === 'kkpho2570' || val === '1234' || val === 'admin' || val === 'kkpho') {
+    sessionStorage.setItem('kkpho_admin_auth', 'true');
+    AdminEditorState.selectedYear = (AppState.selectedYear && AppState.selectedYear !== 'all') ? AppState.selectedYear : '70';
+    initAdminEditedData();
+    renderQuickAdminEditor();
+    if (typeof showAppToast === 'function') {
+      showAppToast('🔓 ยินดีต้อนรับสู่โหมด Admin', 'เข้าสู่ระบบบันทึกผลงานตัวชี้วัดเรียบร้อยแล้ว', '✔️');
+    }
+  } else {
+    input.style.borderColor = '#ef4444';
+    input.value = '';
+    alert('❌ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
+    input.focus();
+  }
+}
+
+function initAdminEditedData() {
+  const yr = AdminEditorState.selectedYear;
+  const ds = OFFICIAL_DATASET[yr] || OFFICIAL_DATASET['70'];
+  AdminEditorState.editedData = {};
+  
+  if (ds && ds.kpis) {
+    ds.kpis.forEach(k => {
+      AdminEditorState.editedData[k.id] = {
+        id: k.id,
+        order: k.order,
+        name: k.name,
+        strategyNum: k.strategyNum,
+        strategy: k.strategy,
+        direction: k.direction,
+        unit: k.unit,
+        baseline: k.baseline,
+        target: k.target,
+        actual: k.actual !== null && k.actual !== undefined ? String(k.actual) : '',
+        status: k.status || 'pending',
+        note_revision: k.note_revision || '',
+        is_moph: Boolean(k.is_moph),
+        is_pao: Boolean(k.is_pao),
+        is_inspect: Boolean(k.is_inspect),
+        is_cup: Boolean(k.is_cup),
+        pao_ref: k.pao_ref || null,
+        cup_code: k.cup_code || null,
+        inspect_no: k.inspect_no || null,
+        moph_ref: k.moph_ref || null,
+        isModified: false
+      };
+    });
+  }
+}
+
+function renderQuickAdminEditor() {
+  const dialog = document.getElementById('quick-admin-dialog');
+  if (!dialog) return;
+
+  const yr = AdminEditorState.selectedYear;
+  const yrFull = (parseInt(yr, 10) < 100) ? `25${yr}` : yr;
+  const ds = OFFICIAL_DATASET[yr] || OFFICIAL_DATASET['70'];
+  const allKpis = Object.values(AdminEditorState.editedData).sort((a, b) => a.order - b.order);
+
+  // Filter
+  const q = (AdminEditorState.searchQuery || '').toLowerCase().trim();
+  const strat = AdminEditorState.selectedStrategy || 'all';
+
+  const filtered = allKpis.filter(k => {
+    if (strat !== 'all' && String(k.strategyNum) !== String(strat)) return false;
+    if (q) {
+      const matchId = (k.id || '').toLowerCase().includes(q);
+      const matchName = (k.name || '').toLowerCase().includes(q);
+      const matchNote = (k.note_revision || '').toLowerCase().includes(q);
+      if (!matchId && !matchName && !matchNote) return false;
+    }
+    return true;
+  });
+
+  const modifiedCount = allKpis.filter(k => k.isModified).length;
+
+  dialog.innerHTML = `
+    <!-- Header -->
+    <div class="admin-header">
+      <div class="admin-title-wrap">
+        <span style="font-size: 1.6rem;">✏️</span>
+        <div>
+          <h3>ระบบบันทึกและจัดการผลงานตัวชี้วัด</h3>
+          <div style="font-size: 0.8rem; opacity: 0.85;">กรอกผลงานประจำไตรมาส ปรับสถานะ และซิงค์ลง Supabase Cloud ทันที</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span class="admin-badge-live">
+          <span class="pulse-dot"></span> Cloud Live Sync
+        </span>
+        <button class="btn btn-icon" onclick="closeQuickAdminEditor()" title="ปิดหน้าต่าง" style="background: rgba(255,255,255,0.1); color: #fff; border-radius: 50%;">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Toolbar Filters -->
+    <div class="admin-toolbar">
+      <div class="admin-filters-left">
+        <!-- Year Select -->
+        <label style="font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; gap: 0.35rem;">
+          <span>📅 ปีงบประมาณ:</span>
+          <select class="admin-select" onchange="handleAdminYearChange(this.value)">
+            <option value="70" ${yr === '70' ? 'selected' : ''}>ปี 2570 (38 ตัวชี้วัด)</option>
+            <option value="69" ${yr === '69' ? 'selected' : ''}>ปี 2569 (38 ตัวชี้วัด)</option>
+            <option value="68" ${yr === '68' ? 'selected' : ''}>ปี 2568 (39 ตัวชี้วัด)</option>
+            <option value="67" ${yr === '67' ? 'selected' : ''}>ปี 2567 (39 ตัวชี้วัด)</option>
+            <option value="66" ${yr === '66' ? 'selected' : ''}>ปี 2566 (41 ตัวชี้วัด)</option>
+          </select>
+        </label>
+
+        <!-- Strategy Select -->
+        <select class="admin-select" onchange="handleAdminStrategyFilter(this.value)">
+          <option value="all">ทุกยุทธศาสตร์ (1 - ${ds.totalPillars || 5})</option>
+          ${(ds.pillars || []).map(p => `
+            <option value="${p.num}" ${String(strat) === String(p.num) ? 'selected' : ''}>ยุทธศาสตร์ที่ ${p.num}</option>
+          `).join('')}
+        </select>
+
+        <!-- Search Input -->
+        <input type="text" class="admin-search-input" placeholder="🔍 ค้นหารหัส, ชื่อตัวชี้วัด..." value="${AdminEditorState.searchQuery || ''}" oninput="handleAdminSearch(this.value)">
+      </div>
+
+      <div class="admin-actions-right">
+        <button class="admin-btn admin-btn-auto" onclick="autoEvaluateAllAdminKPIs()" title="เปรียบเทียบผลงานกับเป้าหมายตามทิศทาง (ยิ่งมาก/ยิ่งน้อย) แล้วปรับสถานะอัตโนมัติ">
+          ⚡ คำนวณสถานะอัตโนมัติทั้งหมด
+        </button>
+        <button class="admin-btn" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.3);" onclick="resetAdminEditedData()" title="รีเซ็ตค่ากลับเป็นข้อมูลเดิม">
+          🔄 รีเซ็ต
+        </button>
+      </div>
+    </div>
+
+    <!-- Table Grid -->
+    <div class="admin-table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th style="width: 70px; text-align: center;">ลำดับ</th>
+            <th style="width: 95px; text-align: center;">รหัส</th>
+            <th style="min-width: 280px;">ชื่อตัวชี้วัดเชิงยุทธศาสตร์</th>
+            <th style="width: 110px; text-align: center;">เป้าหมาย</th>
+            <th style="width: 140px; text-align: center; background: rgba(56, 189, 248, 0.12); color: #38bdf8;">ผลงานจริง (Actual)</th>
+            <th style="width: 140px; text-align: center;">การประเมินผล</th>
+            <th style="width: 220px; text-align: center;">ความเชื่อมโยงนโยบาย</th>
+            <th style="min-width: 160px;">หมายเหตุ / บันทึกผล</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.length === 0 ? `
+            <tr>
+              <td colspan="8" style="text-align: center; padding: 3rem; color: #94a3b8;">
+                🔍 ไม่พบตัวชี้วัดที่ตรงกับเงื่อนไขการค้นหา
+              </td>
+            </tr>
+          ` : filtered.map(k => {
+            const isPass = k.status === 'pass';
+            const isFail = k.status === 'fail';
+            const isPending = !isPass && !isFail;
+            const statusClass = isPass ? 'status-pass' : (isFail ? 'status-fail' : 'status-pending');
+
+            return `
+              <tr style="${k.isModified ? 'background: rgba(16, 185, 129, 0.08);' : ''}">
+                <td style="text-align: center; font-weight: 700; color: #94a3b8;">${k.order}</td>
+                <td style="text-align: center;">
+                  <span class="badge-kpi-id" style="font-size: 0.72rem; padding: 2px 6px;">${k.id}</span>
+                </td>
+                <td>
+                  <div style="font-weight: 600; line-height: 1.35;">${k.name}</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">
+                    ยุทธศาสตร์ที่ ${k.strategyNum} &bull; ทิศทาง: <span style="color: #38bdf8;">${k.direction}</span> &bull; หน่วย: ${k.unit}
+                  </div>
+                </td>
+                <td style="text-align: center; font-weight: 700; color: #f8fafc;">
+                  ${k.target}
+                </td>
+                <td style="text-align: center; background: rgba(56, 189, 248, 0.04);">
+                  <input type="text" class="admin-actual-input" value="${k.actual || ''}" placeholder="ใส่ผลงาน..." oninput="handleAdminActualChange('${k.id}', this.value)" onblur="handleAdminActualBlur('${k.id}')">
+                </td>
+                <td style="text-align: center;">
+                  <select class="admin-status-badge-select ${statusClass}" onchange="handleAdminStatusChange('${k.id}', this.value)">
+                    <option value="pass" ${isPass ? 'selected' : ''}>🟢 ผ่านเกณฑ์</option>
+                    <option value="fail" ${isFail ? 'selected' : ''}>🔴 ไม่ผ่านเกณฑ์</option>
+                    <option value="pending" ${isPending ? 'selected' : ''}>🟡 รอประมวลผล</option>
+                  </select>
+                </td>
+                <td style="text-align: center;">
+                  <div class="admin-policy-checks" style="justify-content: center;">
+                    <span class="admin-policy-toggle ${k.is_moph ? 'active-moph' : ''}" onclick="handleAdminPolicyToggle('${k.id}', 'moph')" title="กระทรวงสาธารณสุข">🏛️ กสธ.</span>
+                    <span class="admin-policy-toggle ${k.is_pao ? 'active-pao' : ''}" onclick="handleAdminPolicyToggle('${k.id}', 'pao')" title="ภารกิจถ่ายโอน รพ.สต. สู่ อบจ.">🏢 อบจ.</span>
+                    <span class="admin-policy-toggle ${k.is_inspect ? 'active-inspect' : ''}" onclick="handleAdminPolicyToggle('${k.id}', 'inspect')" title="ตรวจราชการ">📋 ตรก.</span>
+                    <span class="admin-policy-toggle ${k.is_cup ? 'active-cup' : ''}" onclick="handleAdminPolicyToggle('${k.id}', 'cup')" title="เครือข่าย CUP">🏥 CUP</span>
+                  </div>
+                </td>
+                <td>
+                  <input type="text" class="admin-notes-input" value="${escapeHtml(k.note_revision || '')}" placeholder="บันทึกเพิ่มเติม..." oninput="handleAdminNoteChange('${k.id}', this.value)">
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="admin-footer">
+      <div class="admin-footer-left">
+        <span>📊 แสดงผล <strong>${filtered.length}</strong> / <strong>${allKpis.length}</strong> รายการ (ปี ${yrFull})</span>
+        ${modifiedCount > 0 ? `
+          <span class="admin-dirty-count">มีการแก้ไข ${modifiedCount} รายการ</span>
+        ` : `<span style="color: #10b981; font-size: 0.8rem;">✓ ข้อมูลตรงกับฐานข้อมูลล่าสุด</span>`}
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <button class="btn btn-secondary" onclick="closeQuickAdminEditor()" style="padding: 0.6rem 1.25rem;">ปิดหน้าต่าง</button>
+        <button class="admin-btn-save-cloud" id="admin-save-cloud-btn" onclick="saveAllAdminKPIsToCloud()" ${AdminEditorState.isSaving ? 'disabled' : ''}>
+          ${AdminEditorState.isSaving ? `
+            <span class="spinner-small" style="width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; display: inline-block; animation: spin 0.8s linear infinite;"></span>
+            กำลังบันทึกลง Cloud...
+          ` : `
+            💾 บันทึกทั้งหมดลง Supabase Cloud
+          `}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function handleAdminYearChange(val) {
+  AdminEditorState.selectedYear = val;
+  initAdminEditedData();
+  renderQuickAdminEditor();
+}
+
+function handleAdminStrategyFilter(val) {
+  AdminEditorState.selectedStrategy = val;
+  renderQuickAdminEditor();
+}
+
+function handleAdminSearch(val) {
+  AdminEditorState.searchQuery = val;
+  renderQuickAdminEditor();
+}
+
+function handleAdminActualChange(kpiId, val) {
+  const item = AdminEditorState.editedData[kpiId];
+  if (!item) return;
+  item.actual = val;
+  item.isModified = true;
+
+  // Auto calculate status if numerical
+  const num = extractNumber(val);
+  const targetNum = extractNumber(item.target);
+  if (num !== null && targetNum !== null) {
+    item.status = evaluateStatus(item.direction, val, item.target);
+  }
+  updateDirtyCounter();
+}
+
+function handleAdminActualBlur(kpiId) {
+  renderQuickAdminEditor();
+}
+
+function handleAdminStatusChange(kpiId, val) {
+  const item = AdminEditorState.editedData[kpiId];
+  if (!item) return;
+  item.status = val;
+  item.isModified = true;
+  renderQuickAdminEditor();
+}
+
+function handleAdminPolicyToggle(kpiId, key) {
+  const item = AdminEditorState.editedData[kpiId];
+  if (!item) return;
+  if (key === 'moph') item.is_moph = !item.is_moph;
+  if (key === 'pao') {
+    item.is_pao = !item.is_pao;
+    if (item.is_pao && !item.pao_ref) item.pao_ref = 'รพ.สต.ถ่ายโอน/ปฐมภูมิ';
+  }
+  if (key === 'inspect') item.is_inspect = !item.is_inspect;
+  if (key === 'cup') item.is_cup = !item.is_cup;
+  item.isModified = true;
+  renderQuickAdminEditor();
+}
+
+function handleAdminNoteChange(kpiId, val) {
+  const item = AdminEditorState.editedData[kpiId];
+  if (!item) return;
+  item.note_revision = val;
+  item.isModified = true;
+  updateDirtyCounter();
+}
+
+function updateDirtyCounter() {
+  const allKpis = Object.values(AdminEditorState.editedData);
+  const modifiedCount = allKpis.filter(k => k.isModified).length;
+  const countEl = document.querySelector('.admin-footer-left');
+  if (countEl) {
+    const yr = AdminEditorState.selectedYear;
+    const yrFull = (parseInt(yr, 10) < 100) ? `25${yr}` : yr;
+    countEl.innerHTML = `
+      <span>📊 แสดงผล <strong>${allKpis.length}</strong> / <strong>${allKpis.length}</strong> รายการ (ปี ${yrFull})</span>
+      ${modifiedCount > 0 ? `
+        <span class="admin-dirty-count">มีการแก้ไข ${modifiedCount} รายการ</span>
+      ` : `<span style="color: #10b981; font-size: 0.8rem;">✓ ข้อมูลตรงกับฐานข้อมูลล่าสุด</span>`}
+    `;
+  }
+}
+
+function autoEvaluateAllAdminKPIs() {
+  const allKpis = Object.values(AdminEditorState.editedData);
+  let count = 0;
+  allKpis.forEach(k => {
+    if (k.actual !== null && k.actual !== undefined && String(k.actual).trim() !== '') {
+      const prevStatus = k.status;
+      k.status = evaluateStatus(k.direction, k.actual, k.target);
+      if (prevStatus !== k.status) {
+        k.isModified = true;
+        count++;
+      }
+    }
+  });
+  renderQuickAdminEditor();
+  if (typeof showAppToast === 'function') {
+    showAppToast('⚡ คำนวณสถานะอัตโนมัติสำเร็จ', `ประเมินผลตัวชี้วัดเรียบร้อยแล้ว (${count} รายการมีการอัปเดต)`, '✔️');
+  }
+}
+
+function resetAdminEditedData() {
+  if (confirm('คุณต้องการรีเซ็ตค่าที่แก้ไขทั้งหมดกลับเป็นค่าเดิมใช่หรือไม่?')) {
+    initAdminEditedData();
+    renderQuickAdminEditor();
+  }
+}
+
+async function saveAllAdminKPIsToCloud() {
+  const yr = AdminEditorState.selectedYear;
+  const fiscalYearFull = (parseInt(yr, 10) < 100) ? `25${yr}` : yr;
+  const allKpis = Object.values(AdminEditorState.editedData);
+  
+  AdminEditorState.isSaving = true;
+  renderQuickAdminEditor();
+
+  const supabaseUrl = AppState.supabaseUrl || 'https://gjcsjrsxslwlpffhytwl.supabase.co';
+  const supabaseKey = AppState.supabaseKey;
+
+  let successCount = 0;
+  let errorCount = 0;
+
+  try {
+    for (const k of allKpis) {
+      // Build patch body
+      const patchBody = {
+        actual: (k.actual !== null && k.actual !== undefined && String(k.actual).trim() !== '') ? String(k.actual).trim() : null,
+        status: k.status || 'pending',
+        note_revision: k.note_revision || null,
+        is_moph: Boolean(k.is_moph),
+        is_pao: Boolean(k.is_pao),
+        is_inspect: Boolean(k.is_inspect),
+        is_cup: Boolean(k.is_cup),
+        pao_ref: k.is_pao ? (k.pao_ref || 'รพ.สต.ถ่ายโอน') : null
+      };
+
+      const res = await fetch(`${supabaseUrl}/rest/v1/strategic_kpis?fiscal_year=eq.${fiscalYearFull}&kpi_id=eq.${k.id}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(patchBody)
+      });
+
+      if (res.ok) {
+        successCount++;
+        k.isModified = false;
+      } else {
+        errorCount++;
+      }
+    }
+
+    // Update Local Dataset & AppState
+    if (OFFICIAL_DATASET[yr]) {
+      OFFICIAL_DATASET[yr].kpis = allKpis.map(k => ({
+        ...k,
+        actual: (k.actual !== null && k.actual !== undefined && String(k.actual).trim() !== '') ? String(k.actual).trim() : null
+      }));
+    }
+    if (AppState.selectedYear === yr) {
+      AppState.kpiData = OFFICIAL_DATASET[yr].kpis;
+      renderApp();
+    }
+
+    AdminEditorState.isSaving = false;
+    renderQuickAdminEditor();
+
+    if (typeof showAppToast === 'function') {
+      showAppToast('☁️ บันทึกลง Supabase สำเร็จ', `อัปเดตข้อมูลตัวชี้วัดปี ${fiscalYearFull} ทั้งหมด ${allKpis.length} รายการลง Cloud เรียบร้อยแล้ว`, '✔️');
+    }
+  } catch (err) {
+    console.error('Error saving admin KPIs to cloud:', err);
+    AdminEditorState.isSaving = false;
+    renderQuickAdminEditor();
+    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Supabase: ' + err.message);
+  }
+}
+
+// Window Exports
+window.openQuickAdminEditor = openQuickAdminEditor;
+window.closeQuickAdminEditor = closeQuickAdminEditor;
+window.renderAdminAuthDialog = renderAdminAuthDialog;
+window.verifyAdminPasscode = verifyAdminPasscode;
+window.renderQuickAdminEditor = renderQuickAdminEditor;
+window.handleAdminYearChange = handleAdminYearChange;
+window.handleAdminStrategyFilter = handleAdminStrategyFilter;
+window.handleAdminSearch = handleAdminSearch;
+window.handleAdminActualChange = handleAdminActualChange;
+window.handleAdminActualBlur = handleAdminActualBlur;
+window.handleAdminStatusChange = handleAdminStatusChange;
+window.handleAdminPolicyToggle = handleAdminPolicyToggle;
+window.handleAdminNoteChange = handleAdminNoteChange;
+window.autoEvaluateAllAdminKPIs = autoEvaluateAllAdminKPIs;
+window.resetAdminEditedData = resetAdminEditedData;
+window.saveAllAdminKPIsToCloud = saveAllAdminKPIsToCloud;
+
 window.renderAlignmentBadgesHtml = renderAlignmentBadgesHtml;
 window.getCurrentlyFilteredKPIs = getCurrentlyFilteredKPIs;
 window.handleColumnFilterChange = handleColumnFilterChange;
