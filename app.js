@@ -11225,12 +11225,14 @@ function handleAdminActualChange(kpiId, val) {
   item.actual = val;
   item.isModified = true;
 
-  // Auto calculate status if numerical
-  const num = extractNumber(val);
-  const targetNum = extractNumber(item.target);
-  if (num !== null && targetNum !== null) {
-    item.status = evaluateStatus(item.direction, val, item.target);
-  }
+  // Auto calculate status using object format
+  const res = evaluateStatus({
+    id: item.id,
+    direction: item.direction,
+    actual: val,
+    target: item.target
+  });
+  item.status = res.status;
   updateDirtyCounter();
 }
 
@@ -11290,7 +11292,13 @@ function autoEvaluateAllAdminKPIs() {
   allKpis.forEach(k => {
     if (k.actual !== null && k.actual !== undefined && String(k.actual).trim() !== '') {
       const prevStatus = k.status;
-      k.status = evaluateStatus(k.direction, k.actual, k.target);
+      const res = evaluateStatus({
+        id: k.id,
+        direction: k.direction,
+        actual: k.actual,
+        target: k.target
+      });
+      k.status = res.status;
       if (prevStatus !== k.status) {
         k.isModified = true;
         count++;
@@ -11360,7 +11368,8 @@ async function saveAllAdminKPIsToCloud() {
     if (OFFICIAL_DATASET[yr]) {
       OFFICIAL_DATASET[yr].kpis = allKpis.map(k => ({
         ...k,
-        actual: (k.actual !== null && k.actual !== undefined && String(k.actual).trim() !== '') ? String(k.actual).trim() : null
+        actual: (k.actual !== null && k.actual !== undefined && String(k.actual).trim() !== '') ? String(k.actual).trim() : null,
+        status: k.status || 'pending'
       }));
     }
 
@@ -11371,6 +11380,7 @@ async function saveAllAdminKPIsToCloud() {
 
     // 3. Immediately Re-render Whole Application (Dashboard, Cards, Radar, Table)
     AppState.kpiData = OFFICIAL_DATASET[yr].kpis;
+    updateStrategyFilterOptions();
     renderApp();
 
     AdminEditorState.isSaving = false;
